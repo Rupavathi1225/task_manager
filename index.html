@@ -231,18 +231,18 @@
         /* My Tasks Overview Section specific styles */
         
     .tasks-list-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem 0;
-}
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem 0;
+    }
 
 
-.task-card {
-    min-width: 300px;
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-}
+    .task-card {
+        min-width: 300px;
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+    }
 
 
         .task-card {
@@ -1922,6 +1922,11 @@
         const markAsTaskLink = document.getElementById('markAsTaskLink');
         const markAsTaskParentId = document.getElementById('markAsTaskParentId');
 
+        // Checklist elements in markAsTaskModal
+        const checklistInput = document.getElementById("checklistInput");
+        const addChecklistBtn = document.getElementById("addChecklistBtn");
+        const checklistItemsUl = document.getElementById("checklistItems");
+
 
         // Initialize the application
         function initApp() {
@@ -2040,6 +2045,34 @@
                     markAsTaskModal.style.display = 'none';
                 }
             });
+
+            // Checklist functionality in Mark as Task Modal
+            if (addChecklistBtn) {
+                addChecklistBtn.addEventListener('click', () => {
+                    const value = checklistInput.value.trim();
+                    if (value) {
+                        const li = document.createElement("li");
+                        li.className = "flex items-center bg-gray-50 p-2 rounded-md"; // Added styling
+                        li.innerHTML = `
+                            <input type="checkbox" class="mr-2 h-4 w-4 accent-indigo-500">
+                            <span>${value}</span>
+                            <button class="ml-auto text-red-600 text-sm remove-item" title="Remove item">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        `;
+                        checklistItemsUl.appendChild(li);
+                        checklistInput.value = '';
+                    }
+                });
+            }
+
+            if (checklistItemsUl) {
+                checklistItemsUl.addEventListener("click", (e) => {
+                    if (e.target.closest(".remove-item")) {
+                        e.target.closest("li").remove();
+                    }
+                });
+            }
         }
 
         // Load user data from Firestore
@@ -2349,6 +2382,20 @@
             const parentTaskId = markAsTaskParentId.value.trim();
             const addTo = document.getElementById('markAsTaskAddTo').value;
 
+            // Collect checklist items from the modal's UL
+            const checklistItems = [];
+            checklistItemsUl.querySelectorAll('li').forEach((li, index) => {
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                const textSpan = li.querySelector('span');
+                if (textSpan) {
+                    checklistItems.push({
+                        text: textSpan.textContent.trim(),
+                        completed: checkbox ? checkbox.checked : false,
+                        index: index // Store index for potential future use
+                    });
+                }
+            });
+
 
             if (!currentUser || !title || !dueDate || !assignedTo) {
                 showCustomAlert("Error", "Please fill out all required fields.");
@@ -2391,6 +2438,7 @@
                     points: 0,
                     comments: comments ? [{ text: comments, by: createdByUsername, createdAt: serverTimestamp() }] : [], // NEW FIELD (array of objects)
                     notes: [], // Initialize notes array
+                    checklist: checklistItems, // NEW FIELD: Add the collected checklist items
                     createdBy: createdByUsername,
                     assignedTo: assignedTo,
                     collaborators: collaborators, // NEW FIELD (array of UIDs)
@@ -2412,6 +2460,7 @@
                 await addDoc(collection(db, "forms"), taskData);
 
                 markAsTaskForm.reset();
+                checklistItemsUl.innerHTML = ''; // Clear checklist items after submission
                 markAsTaskModal.style.display = 'none';
                 showCustomAlert("Success", "Task created successfully!");
                 
@@ -2473,6 +2522,7 @@
                     points: taskPoints,
                     comments: [],
                     notes: [], // Initialize notes as an empty array
+                    checklist: [], // Initialize checklist as an empty array for this form
                     createdBy: createdByUsername,
                     assignedTo: assignedToUserId,
                     isSubtask: false, // Default for main task form
@@ -2535,6 +2585,7 @@
                     points: 0, // Default points
                     comments: [],
                     notes: [],
+                    checklist: [], // Initialize checklist as an empty array for this form
                     createdBy: createdByUsername,
                     assignedTo: assignedTo, // The selected assignee
                     isSubtask: false, // Default for Gantt task form
@@ -3470,45 +3521,71 @@
                     const emailHtml = task.taskSpecificEmail 
                         ? `<p class="flex items-center"><i class="fas fa-envelope mr-2 text-indigo-500"></i> Task Email: <span class="font-medium text-gray-700">${task.taskSpecificEmail}</span></p>`
                         : '';
+
+                    const checklistHtml = task.checklist && task.checklist.length > 0
+                        ? `<ul class="space-y-2 text-gray-800">
+                            ${task.checklist.map((item, index) => `
+                                <li class="flex items-center bg-gray-50 p-2 rounded-md">
+                                    <input type="checkbox" class="mr-2 h-4 w-4 accent-indigo-500" ${item.completed ? 'checked' : ''} data-task-id="${task.id}" data-item-index="${index}">
+                                    <span class="${item.completed ? 'line-through text-gray-500' : ''}">${item.text}</span>
+                                </li>
+                            `).join('')}
+                        </ul>`
+                        : '<p class="text-sm text-gray-500">No checklist items.</p>';
+
                      taskCard.innerHTML = `
   <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
     <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
     <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
   </div>
 
-  <div class="task-details mt-2 pl-2 text-sm text-gray-700 hidden">
-    <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
-        <div class="flex items-center">
-            <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
-            ${flagIcon}
-        </div>
-    </div>
-    ${lockIcon}
-    <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
-    <div class="text-sm text-gray-500 space-y-1 mb-4">
-        <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
-        <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
-        <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
-        <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
-        ${emailHtml}
-        <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
-        <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
-        <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
-        ${subtaskHtml}
-        ${parentTaskHtml}
-        ${collaboratorsHtml}
-        ${imageUrlHtml}
-        ${relatedLinkHtml}
-
-        <div class="gantt-popup-notes">
-            <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
-            ${notesHtml}
-            <div class="gantt-popup-add-note mt-2">
-                <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
-                <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
+  <div class="task-details mt-2 pl-2 text-gray-700 hidden">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Column 1 & 2 (Description and other primary details) -->
+        <div class="md:col-span-2">
+            <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
+                <div class="flex items-center">
+                    <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
+                    ${flagIcon}
+                </div>
             </div>
+            ${lockIcon}
+            <h4 class="text-lg font-semibold mb-2">Description:</h4>
+            <p class="text-base text-gray-800 mb-4">${task.description || 'No description provided.'}</p>
+
+            <div class="text-sm text-gray-500 space-y-1 mb-4">
+                <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
+                <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
+                <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
+                <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
+                ${emailHtml}
+                <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
+                <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
+                <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
+                ${subtaskHtml}
+                ${parentTaskHtml}
+                ${collaboratorsHtml}
+                ${imageUrlHtml}
+                ${relatedLinkHtml}
+            </div>
+
+            <!-- Notes Section (as is, but within col-span-2) -->
+            <div class="gantt-popup-notes">
+                <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
+                ${notesHtml}
+                <div class="gantt-popup-add-note mt-2">
+                    <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
+                    <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
+                </div>
+            </div>
+            ${commentsHtml}
         </div>
-        ${commentsHtml}
+
+        <!-- Column 3 (Checklist) -->
+        <div>
+            <h4 class="text-lg font-semibold mb-2 flex items-center"><i class="fas fa-clipboard-check mr-2 text-indigo-500"></i>Checklist:</h4>
+            ${checklistHtml}
+        </div>
     </div>
     <div class="task-actions flex flex-wrap gap-2 mt-4">
         ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
@@ -3600,6 +3677,36 @@
                 btn.addEventListener('click', () => {
                     const taskId = btn.dataset.id;
                     showCustomAlert("Edit Task", `Editing task with ID: ${taskId}. (Functionality to be implemented)`);
+                });
+            });
+
+            // Event listener for checklist item checkboxes
+            document.querySelectorAll('.task-details input[type="checkbox"][data-item-index]').forEach(checkbox => {
+                checkbox.addEventListener('change', async (e) => {
+                    const taskId = e.target.dataset.taskId;
+                    const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
+                    const isChecked = e.target.checked;
+
+                    const taskRef = doc(db, 'forms', taskId);
+                    try {
+                        const taskDoc = await getDoc(taskRef);
+                        if (taskDoc.exists()) {
+                            const taskData = taskDoc.data();
+                            const checklist = [...(taskData.checklist || [])]; // Create a mutable copy
+
+                            if (itemIndex >= 0 && itemIndex < checklist.length) {
+                                checklist[itemIndex].completed = isChecked;
+                                await updateDoc(taskRef, { checklist: checklist });
+                                // Update the UI immediately for visual feedback
+                                e.target.nextElementSibling.classList.toggle('line-through', isChecked);
+                                e.target.nextElementSibling.classList.toggle('text-gray-500', isChecked);
+                                showCustomAlert("Checklist Updated", "Checklist item status updated.");
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Error updating checklist item:", error);
+                        showCustomAlert("Error", "Failed to update checklist item: " + error.message);
+                    }
                 });
             });
         }
@@ -3699,45 +3806,6 @@
         setInterval(updateCurrentDate, 60000);
     </script>
     <script>
-let timerInterval;
-let secondsElapsed = 0;
-
-document.getElementById("startTimerBtn")?.addEventListener("click", () => {
-  clearInterval(timerInterval);
-  secondsElapsed = 0;
-  updateTimerDisplay();
-
-  timerInterval = setInterval(() => {
-    secondsElapsed++;
-    updateTimerDisplay();
-  }, 1000);
-});
-
-function updateTimerDisplay() {
-  const hrs = String(Math.floor(secondsElapsed / 3600)).padStart(2, '0');
-  const mins = String(Math.floor((secondsElapsed % 3600) / 60)).padStart(2, '0');
-  const secs = String(secondsElapsed % 60).padStart(2, '0');
-  document.getElementById("liveTimerDisplay").textContent = `${hrs}:${mins}:${secs}`;
-}
-
-document.getElementById("addChecklistBtn")?.addEventListener("click", () => {
-  const input = document.getElementById("checklistInput");
-  const value = input.value.trim();
-  if (value) {
-    const li = document.createElement("li");
-    li.innerHTML = `<input type="checkbox" class="mr-2">${value} <button class="ml-2 text-red-600 text-sm remove-item">×</button>`;
-    document.getElementById("checklistItems").appendChild(li);
-    input.value = '';
-  }
-});
-
-document.getElementById("checklistItems")?.addEventListener("click", (e) => {
-  if (e.target.classList.contains("remove-item")) {
-    e.target.closest("li").remove();
-  }
-});
-</script>
-<script>
 let timerInterval = null;  // ✅ declared only once
 let startTime = null;
 let totalSeconds = 0;
@@ -3814,30 +3882,34 @@ document.getElementById('startTimerBtn').addEventListener('click', function () {
   ];
 
   const container = document.getElementById("myTasksListContainer");
-  container.innerHTML = ""; // Clear old task cards
+  // Ensure this script runs after the main app logic has initialized myTasksListContainer
+  // This dummy data rendering will be overwritten by the Firebase data in renderMyTasks()
+  // if (container) {
+  //   container.innerHTML = ""; // Clear old task cards
+  //   tasks.forEach(task => {
+  //     const taskItem = document.createElement("div");
+  //     taskItem.className = "flex items-center justify-between bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm";
 
-  tasks.forEach(task => {
-    const taskItem = document.createElement("div");
-    taskItem.className = "flex items-center justify-between bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm";
+  //     taskItem.innerHTML = `
+  //       <div class="flex items-center gap-3">
+  //         <input type="checkbox" class="h-5 w-5 accent-indigo-500 rounded-full">
+  //         <span class="text-base font-medium">${task.title}</span>
+  //       </div>
+  //       <button>
+  //         <i class="far fa-star text-gray-400 hover:text-yellow-400"></i>
+  //       </button>
+  //     `;
 
-    taskItem.innerHTML = `
-      <div class="flex items-center gap-3">
-        <input type="checkbox" class="h-5 w-5 accent-indigo-500 rounded-full">
-        <span class="text-base font-medium">${task.title}</span>
-      </div>
-      <button>
-        <i class="far fa-star text-gray-400 hover:text-yellow-400"></i>
-      </button>
-    `;
+  //     container.appendChild(taskItem);
+  //   });
+  // }
 
-    container.appendChild(taskItem);
-  });
   function toggleTaskDetails(headerElement) {
-  const details = headerElement.nextElementSibling;
-  if (details) {
-    details.classList.toggle('hidden');
+    const details = headerElement.nextElementSibling;
+    if (details) {
+      details.classList.toggle('hidden');
+    }
   }
-}
 
 </script>
 
