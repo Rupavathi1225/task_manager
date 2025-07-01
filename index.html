@@ -10,6 +10,7 @@
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
     <!-- Frappe Gantt CSS -->
     <link href='https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css' rel='stylesheet' />
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -229,13 +230,13 @@
 
         /* My Tasks Overview Section specific styles */
         
-        .tasks-list-grid {
-    display: flex;
-    overflow-x: auto;
-    gap: 1rem;
-    padding: 1rem 0;
-    scroll-snap-type: x mandatory;
+    .tasks-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 0;
 }
+
 
 .task-card {
     min-width: 300px;
@@ -1323,6 +1324,25 @@
                 <button class="task-filter-btn" data-filter="shared">Shared</button>
             </div>
             <div id="myTasksListContainer" class="tasks-list-grid">
+                <div id="myTasksListContainer" class="space-y-3">
+  <!-- Sample Task Item -->
+  <div class="task-card bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm">
+  <!-- Task Header -->
+  <div class="flex items-center justify-between cursor-pointer" onclick="toggleTaskDetails(this)">
+    <span class="text-base font-medium">Seo bhi karana hai</span>
+    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full">
+  </div>
+
+  <!-- Task Details (Initially Hidden) -->
+  <div class="task-details mt-2 pl-2 text-sm text-gray-300 hidden">
+    <p><strong>Description:</strong> Work on optimizing keywords and meta tags.</p>
+    <p><strong>Priority:</strong> Medium</p>
+    <p><strong>Due:</strong> 2025-07-03</p>
+  </div>
+</div>
+
+</div>
+
                 <!-- Tasks will be rendered here by JS -->
             </div>
             <p id="noMyTasksMessage" class="hidden text-center mt-8 text-gray-500 italic text-lg">No tasks match the current filter.</p>
@@ -1345,6 +1365,7 @@
                 </div>
                 <div class="form-group"><label for="taskDate" class="block text-gray-700 font-medium mb-1">Due Date:</label><input type="date" id="taskDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
                 <div class="form-group"><label for="taskTime" class="block text-gray-700 font-medium mb-1">Due Time:</label><input type="time" id="taskTime" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
+                
                 <div class="form-group">
                   <label for="taskType" class="block text-gray-700 font-medium mb-1">Task Type:</label>
                   <select id="taskType" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
@@ -1524,11 +1545,24 @@
                         <!-- Users will be populated here, including 'Self' option -->
                     </select>
                 </div>
+                <div class="form-group">
+    <label for="markAsTaskStartDate" class="block text-gray-700 font-medium mb-1">Start Date:</label>
+    <input type="date" id="markAsTaskStartDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+</div>
+
 
                 <div class="form-group">
                     <label for="markAsTaskDate" class="block text-gray-700 font-medium mb-1">Due Date:</label>
                     <input type="date" id="markAsTaskDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
+                <div class="form-group">
+  <label for="markAsTaskReminder" class="block text-gray-700 font-medium mb-1">
+    Reminder (e.g., 1 day, 2 hours):
+  </label>
+  <input type="text" id="markAsTaskReminder" placeholder="e.g., 1 day, 2 hours" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+</div>
+
+                
 
                 <div class="form-group">
                     <label for="markAsTaskEmail" class="block text-gray-700 font-medium mb-1">Task-Specific Email ID:</label>
@@ -3436,49 +3470,55 @@
                     const emailHtml = task.taskSpecificEmail 
                         ? `<p class="flex items-center"><i class="fas fa-envelope mr-2 text-indigo-500"></i> Task Email: <span class="font-medium text-gray-700">${task.taskSpecificEmail}</span></p>`
                         : '';
+                     taskCard.innerHTML = `
+  <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
+    <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
+    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
+  </div>
 
+  <div class="task-details mt-2 pl-2 text-sm text-gray-700 hidden">
+    <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
+        <div class="flex items-center">
+            <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
+            ${flagIcon}
+        </div>
+    </div>
+    ${lockIcon}
+    <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
+    <div class="text-sm text-gray-500 space-y-1 mb-4">
+        <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
+        <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
+        <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
+        <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
+        ${emailHtml}
+        <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
+        <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
+        <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
+        ${subtaskHtml}
+        ${parentTaskHtml}
+        ${collaboratorsHtml}
+        ${imageUrlHtml}
+        ${relatedLinkHtml}
 
-                    taskCard.innerHTML = `
-                        <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
-                            <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
-                            <div class="flex items-center">
-                                <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
-                                ${flagIcon}
-                            </div>
-                        </div>
-                        ${lockIcon}
-                        <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
-                        <div class="text-sm text-gray-500 space-y-1 mb-4">
-                            <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
-                            <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
-                            <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
-                            <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
-                            ${emailHtml}
-                            <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
-                            <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
-                            <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
-                            ${subtaskHtml}
-                            ${parentTaskHtml}
-                            ${collaboratorsHtml}
-                            ${imageUrlHtml}
-                            ${relatedLinkHtml}
+        <div class="gantt-popup-notes">
+            <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
+            ${notesHtml}
+            <div class="gantt-popup-add-note mt-2">
+                <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
+                <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
+            </div>
+        </div>
+        ${commentsHtml}
+    </div>
+    <div class="task-actions flex flex-wrap gap-2 mt-4">
+        ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
+        ${completeButtonHTML}
+        ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
+    </div>
+  </div>
+`;
 
-                            <div class="gantt-popup-notes">
-                                <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
-                                ${notesHtml}
-                                <div class="gantt-popup-add-note mt-2">
-                                    <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
-                                    <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
-                                </div>
-                            </div>
-                            ${commentsHtml}
-                        </div>
-                        <div class="task-actions flex flex-wrap gap-2 mt-4">
-                            ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
-                            ${completeButtonHTML}
-                            ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
-                        </div>
-                    `;
+                    
                     myTasksListContainerEl.appendChild(taskCard);
                     
                     const addMyTasksNoteBtn = document.getElementById(`addMyTasksNoteBtn-${task.id}`);
@@ -3696,6 +3736,109 @@ document.getElementById("checklistItems")?.addEventListener("click", (e) => {
     e.target.closest("li").remove();
   }
 });
+</script>
+<script>
+let timerInterval = null;  // ✅ declared only once
+let startTime = null;
+let totalSeconds = 0;
+
+// ✅ Check if the current time is within allowed working hours
+function isWorkingHour() {
+    const now = new Date();
+    const hour = now.getHours();
+
+    if (hour === 13) {
+        return 'lunch';
+    }
+
+    if ((hour >= 9 && hour < 13) || (hour >= 14 && hour < 18)) {
+        return true;
+    }
+
+    return false;
+}
+
+// ✅ Update the timer display in HH:MM:SS format
+function updateTimerDisplay() {
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    document.getElementById('liveTimerDisplay').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+// ✅ Timer Start Button Handler
+document.getElementById('startTimerBtn').addEventListener('click', function () {
+    // Stop any previous timer
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+
+    const status = isWorkingHour();
+
+    if (status === 'lunch') {
+        document.getElementById('liveTimerDisplay').textContent = 'Lunch Break 🍱';
+        return;
+    }
+
+    if (status === false) {
+        document.getElementById('liveTimerDisplay').textContent = 'Outside working hours 🚫';
+        return;
+    }
+
+    // Start tracking time
+    timerInterval = setInterval(() => {
+        const checkNow = isWorkingHour();
+
+        if (checkNow === 'lunch') {
+            document.getElementById('liveTimerDisplay').textContent = 'Lunch Break 🍱';
+            return;
+        }
+
+        if (checkNow === false) {
+            document.getElementById('liveTimerDisplay').textContent = 'Outside working hours 🚫';
+            clearInterval(timerInterval);
+            return;
+        }
+
+        totalSeconds++;
+        updateTimerDisplay();
+    }, 1000);
+});
+</script>
+<script>
+  // Dummy task data for now – replace with real data later
+  const tasks = [
+    { title: "chat", priority: "Medium", status: "Completed" },
+    { title: "sunil", priority: "Medium", status: "Completed" },
+    { title: "add image and text", priority: "Medium", status: "Completed" },
+  ];
+
+  const container = document.getElementById("myTasksListContainer");
+  container.innerHTML = ""; // Clear old task cards
+
+  tasks.forEach(task => {
+    const taskItem = document.createElement("div");
+    taskItem.className = "flex items-center justify-between bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm";
+
+    taskItem.innerHTML = `
+      <div class="flex items-center gap-3">
+        <input type="checkbox" class="h-5 w-5 accent-indigo-500 rounded-full">
+        <span class="text-base font-medium">${task.title}</span>
+      </div>
+      <button>
+        <i class="far fa-star text-gray-400 hover:text-yellow-400"></i>
+      </button>
+    `;
+
+    container.appendChild(taskItem);
+  });
+  function toggleTaskDetails(headerElement) {
+  const details = headerElement.nextElementSibling;
+  if (details) {
+    details.classList.toggle('hidden');
+  }
+}
+
 </script>
 
 </body>
