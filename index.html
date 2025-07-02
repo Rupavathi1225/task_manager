@@ -10,7 +10,6 @@
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
     <!-- Frappe Gantt CSS -->
     <link href='https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css' rel='stylesheet' />
-    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -28,6 +27,11 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            position: fixed; /* Make the sidebar fixed */
+            top: 0;
+            left: 0;
+            z-index: 10; /* Ensure it stays on top */
+            overflow-y: auto; /* Allow sidebar content to scroll if it gets too long */
         }
         .sidebar-header {
             padding: 1.5rem;
@@ -38,6 +42,7 @@
             padding: 2rem;
             overflow-y: auto;
             height: 100vh;
+            margin-left: 250px; /* Add margin to prevent overlap with fixed sidebar */
         }
         .section {
             display: none;
@@ -108,6 +113,7 @@
             max-width: 500px;
             position: relative;
         }
+
         .close-btn {
             position: absolute;
             right: 20px;
@@ -230,19 +236,19 @@
 
         /* My Tasks Overview Section specific styles */
         
-    .tasks-list-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        padding: 1rem 0;
-    }
+        .tasks-list-grid {
+            display: flex;
+            overflow-x: auto;
+            gap: 1rem;
+            padding: 1rem 0;
+            scroll-snap-type: x mandatory;
+        }
 
-
-    .task-card {
-        min-width: 300px;
-        flex: 0 0 auto;
-        scroll-snap-align: start;
-    }
+        .task-card {
+            min-width: 300px;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+        }
 
 
         .task-card {
@@ -374,6 +380,7 @@
             }
             .main-content {
                 padding-top: 70px; /* Space for fixed sidebar/header */
+                margin-left: 0; /* Remove margin for mobile */
             }
             .mobile-menu-btn {
                 display: block;
@@ -685,7 +692,6 @@
         .gantt-chart-container {
             background-color: white;
             border-radius: 12px;
-            padding: 1.5rem;
             box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             margin-top: 1.5rem;
             height: 600px; /* Fixed height for Gantt chart, with overflow */
@@ -922,6 +928,9 @@
             border-bottom: 1px solid #374151; /* Darker border for contrast */
             font-weight: 600;
             color: #f1f5f9; /* Lighter text color */
+            display: flex; /* ADDED: For alignment of button */
+            justify-content: space-between; /* ADDED: For alignment of button */
+            align-items: center; /* ADDED: For alignment of button */
         }
         .chat-messages {
             flex-grow: 1;
@@ -935,6 +944,21 @@
             display: flex;
             gap: 0.75rem;
             max-width: 75%;
+            align-items: flex-start; /* Ensure checkbox aligns with top of message */
+        }
+        /* NEW: Hide checkboxes by default */
+        .chat-message .message-checkbox { 
+            margin-top: 8px; /* Align with top of message bubble */
+            cursor: pointer;
+            display: none; /* Hidden by default */
+        }
+        /* NEW: Show checkboxes when chat-selection-mode is active */
+        .chat-selection-mode .chat-message .message-checkbox {
+            display: block; 
+        }
+
+        .chat-message.selected .message-bubble { /* Style for selected messages */
+            border: 2px solid #4f46e5; /* Highlight selected messages */
         }
         .chat-message .avatar {
             width: 40px;
@@ -1043,6 +1067,76 @@
             background-color: #f1f5f9;
         }
 
+        /* Custom Multi-select Dropdown Styles */
+        .multi-select-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .multi-select-dropdown-trigger {
+            width: 100%;
+            padding: .5rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background-color: white;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            min-height: 40px; /* Match height of other inputs */
+        }
+
+        .multi-select-dropdown-trigger .selected-names {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #374151;
+        }
+
+        .multi-select-dropdown-trigger .arrow-icon {
+            margin-left: 0.5rem;
+            color: #6b7280;
+        }
+
+        .multi-select-dropdown-list {
+            display: none;
+            position: absolute;
+            top: 100%; /* Position below the trigger */
+            left: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 50; /* Ensure it's above other form elements */
+            padding: 0.5rem 0;
+        }
+
+        .multi-select-dropdown-list.show {
+            display: block;
+        }
+
+        .multi-select-dropdown-list label {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            width: 100%;
+            color: #374151;
+        }
+
+        .multi-select-dropdown-list label:hover {
+            background-color: #f3f4f6;
+        }
+
+        .multi-select-dropdown-list input[type="checkbox"] {
+            margin-right: 0.75rem;
+            width: auto; /* Override full width for checkboxes */
+        }
     </style>
 </head>
 <body>
@@ -1216,9 +1310,15 @@
             <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
                 <i class="fas fa-comments mr-3 text-indigo-500"></i> Chat-to-Task System
             </h2>
-            <div class="chat-container">
+            <div class="chat-container" id="chatContainer">
                 <canvas id="sparkleCanvas"></canvas> <!-- Sparkle background canvas -->
-                <div class="chat-header">Team Discussion</div>
+                <div class="chat-header">
+                    <span>Team Discussion</span>
+                    <!-- MODIFIED: Changed from checkbox to button -->
+                    <button id="chatSelectionToggleBtn" class="bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700 text-sm">
+                        Select
+                    </button>
+                </div>
                 <div class="chat-messages" id="chatMessages">
                     <!-- Messages will be dynamically inserted here -->
                 </div>
@@ -1231,6 +1331,143 @@
                     </form>
                 </div>
             </div>
+        </section>
+
+        <!-- NEW: Assign Task from Chat Section -->
+        <section id="assignTaskFromChatSection" class="section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-clipboard-check mr-3 text-green-600"></i> Assign Task from Chat
+            </h2>
+            <form id="assignTaskFromChatForm" class="bg-white p-6 rounded-lg shadow-lg">
+                <!-- Task Title (centered, full width) -->
+                <div class="form-group mb-6">
+                    <label for="assignTaskTitle" class="block text-gray-700 font-medium mb-1 text-center text-lg">Task Title:</label>
+                    <textarea id="assignTaskTitle" required rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-center"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Column 1 -->
+                    <div>
+                        <div class="form-group">
+                            <label for="assignTaskPoints" class="block text-gray-700 font-medium mb-1">Points:</label>
+                            <select id="assignTaskPoints" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="30">30</option>
+                                <option value="50">50</option>
+                                <option value="80">80</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group flex items-center">
+                            <input type="checkbox" id="assignTaskIsSubtask" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                            <label for="assignTaskIsSubtask" class="text-gray-700 font-medium whitespace-nowrap ml-1">Is this a subtask?</label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignTaskPriority" class="block text-gray-700 font-medium mb-1">Priority:</label>
+                            <select id="assignTaskPriority" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignTaskDate" class="block text-gray-700 font-medium mb-1">Due Date:</label>
+                            <input type="date" id="assignTaskDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignTaskAssignTo" class="block text-gray-700 font-medium mb-1">Assign To:</label>
+                            <select id="assignTaskAssignTo" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <!-- Users will be populated here -->
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="block text-gray-700 font-medium mb-1">Collaborators (select multiple):</label>
+                            <div class="multi-select-dropdown">
+                                <button type="button" id="collaboratorsDropdownTrigger" class="multi-select-dropdown-trigger">
+                                    <span class="selected-names">Select Collaborators</span>
+                                    <i class="fas fa-chevron-down arrow-icon"></i>
+                                </button>
+                                <div id="collaboratorsDropdownList" class="multi-select-dropdown-list">
+                                    <!-- Checkboxes will be populated here by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignTaskEmail" class="block text-gray-700 font-medium mb-1">Task-Specific Email ID:</label>
+                            <input type="email" id="assignTaskEmail" placeholder="Enter an email for this task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div>
+                        <div class="form-group">
+                            <label for="assignTaskImageUpload" class="block text-gray-700 font-medium mb-1">Upload Image:</label>
+                            <input type="file" id="assignTaskImageUpload" accept="image/*" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignTaskLink" class="block text-gray-700 font-medium mb-1">Related Link:</label>
+                            <input type="url" id="assignTaskLink" placeholder="e.g., https://example.com/related-doc" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignTaskParentId" class="block text-gray-700 font-medium mb-1">Parent Task ID (if subtask):</label>
+                            <input type="text" id="assignTaskParentId" placeholder="Enter ID of parent task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assignTaskAddTo" class="block text-gray-700 font-medium mb-1">Add to:</label>
+                            <select id="assignTaskAddTo" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="personal">Personal Task List</option>
+                                <option value="gantt">Gantt Chart</option>
+                                <option value="note">Sticky Note</option>
+                            </select>
+                        </div>
+
+                        <!-- MOVED: Comments -->
+                        <div class="form-group">
+                            <label for="assignTaskComments" class="block text-gray-700 font-medium mb-1">Comments:</label>
+                            <textarea id="assignTaskComments" rows="3" placeholder="Add initial comments for this task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                        </div>
+
+                        <!-- MOVED: HR for separation -->
+                        <hr class="my-6">
+
+                        <!-- MOVED: Timer -->
+                        <div class="form-group">
+                          <label class="block text-gray-700 font-medium mb-1">Start Timer:</label>
+                          <button type="button" id="startTimerBtnAssign" class="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            <i class="fas fa-play mr-2"></i>Start Timer
+                          </button>
+                          <div id="liveTimerDisplayAssign" class="mt-2 text-lg font-bold text-center text-gray-800">00:00:00</div>
+                        </div>
+
+                        <!-- MODIFIED: Checklist UI -->
+                        <div class="form-group mt-4">
+                            <label for="checklistInputAssign" class="block text-gray-700 font-medium mb-1">Checklist:</label>
+                            <div class="flex items-center gap-2 mb-2">
+                                <input type="text" id="checklistInputAssign" placeholder="Add checklist item..." class="flex-grow p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <button type="button" id="addChecklistBtnAssign" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center justify-center">
+                                    <i class="fas fa-plus mr-1"></i> Add
+                                </button>
+                            </div>
+                            <button type="button" id="toggleChecklistItemsBtnAssign" class="mt-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 flex items-center justify-center">
+                                <i class="fas fa-chevron-up mr-2" id="toggleChecklistIconAssign"></i> <span id="toggleChecklistTextAssign">Show Checklist Items</span>
+                            </button>
+                            <ul id="checklistItemsAssign" class="list-disc pl-5 space-y-1 text-gray-700 mt-2 hidden">
+                                <!-- checklist items go here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3 mt-6 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-200">Create Task</button>
+            </form>
         </section>
 
 
@@ -1324,25 +1561,6 @@
                 <button class="task-filter-btn" data-filter="shared">Shared</button>
             </div>
             <div id="myTasksListContainer" class="tasks-list-grid">
-                <div id="myTasksListContainer" class="space-y-3">
-  <!-- Sample Task Item -->
-  <div class="task-card bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm">
-  <!-- Task Header -->
-  <div class="flex items-center justify-between cursor-pointer" onclick="toggleTaskDetails(this)">
-    <span class="text-base font-medium">Seo bhi karana hai</span>
-    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full">
-  </div>
-
-  <!-- Task Details (Initially Hidden) -->
-  <div class="task-details mt-2 pl-2 text-sm text-gray-300 hidden">
-    <p><strong>Description:</strong> Work on optimizing keywords and meta tags.</p>
-    <p><strong>Priority:</strong> Medium</p>
-    <p><strong>Due:</strong> 2025-07-03</p>
-  </div>
-</div>
-
-</div>
-
                 <!-- Tasks will be rendered here by JS -->
             </div>
             <p id="noMyTasksMessage" class="hidden text-center mt-8 text-gray-500 italic text-lg">No tasks match the current filter.</p>
@@ -1365,7 +1583,6 @@
                 </div>
                 <div class="form-group"><label for="taskDate" class="block text-gray-700 font-medium mb-1">Due Date:</label><input type="date" id="taskDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
                 <div class="form-group"><label for="taskTime" class="block text-gray-700 font-medium mb-1">Due Time:</label><input type="time" id="taskTime" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></div>
-                
                 <div class="form-group">
                   <label for="taskType" class="block text-gray-700 font-medium mb-1">Task Type:</label>
                   <select id="taskType" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
@@ -1493,142 +1710,6 @@
         </div>
     </div>
     
-    <!-- NEW: Mark as Task Modal -->
-    <div id="markAsTaskModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn" id="closeMarkAsTaskModalBtn">×</span>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Create Task from Message</h2>
-            <form id="markAsTaskForm">
-                <div class="form-group">
-                    <label for="markAsTaskTitle" class="block text-gray-700 font-medium mb-1">Title:</label>
-                    <textarea id="markAsTaskTitle" required rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                    <!-- NEW: Task Points -->
-<div class="form-group">
-  <label for="markAsTaskPoints" class="block text-gray-700 font-medium mb-1">Points:</label>
-  <select id="markAsTaskPoints" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-    <option value="30">30</option>
-    <option value="50">50</option>
-    <option value="80">80</option>
-    <option value="100">100</option>
-  </select>
-</div>
-
-                </div>
-
-                <!-- NEW: Subtask Checkbox -->
-                <div class="form-group flex items-center">
-                    <input type="checkbox" id="markAsTaskIsSubtask" class="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                    <label for="markAsTaskIsSubtask" class="text-gray-700 font-medium">Is this a subtask?</label>
-                </div>
-
-                <!-- NEW: Priority Options -->
-                <div class="form-group">
-                    <label for="markAsTaskPriority" class="block text-gray-700 font-medium mb-1">Priority:</label>
-                    <select id="markAsTaskPriority" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="Low">Low</option>
-                        <option value="Medium" selected>Medium</option>
-                        <option value="High">High</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="markAsTaskAssignTo" class="block text-gray-700 font-medium mb-1">Assign To:</label>
-                    <select id="markAsTaskAssignTo" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                        <!-- Users will be populated here -->
-                    </select>
-                </div>
-                
-                <!-- NEW: Collaborations -->
-                <div class="form-group">
-                    <label for="markAsTaskCollaborators" class="block text-gray-700 font-medium mb-1">Collaborators (select multiple):</label>
-                    <select id="markAsTaskCollaborators" multiple class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 h-24">
-                        <!-- Users will be populated here, including 'Self' option -->
-                    </select>
-                </div>
-                <div class="form-group">
-    <label for="markAsTaskStartDate" class="block text-gray-700 font-medium mb-1">Start Date:</label>
-    <input type="date" id="markAsTaskStartDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-</div>
-
-
-                <div class="form-group">
-                    <label for="markAsTaskDate" class="block text-gray-700 font-medium mb-1">Due Date:</label>
-                    <input type="date" id="markAsTaskDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div class="form-group">
-  <label for="markAsTaskReminder" class="block text-gray-700 font-medium mb-1">
-    Reminder (e.g., 1 day, 2 hours):
-  </label>
-  <input type="text" id="markAsTaskReminder" placeholder="e.g., 1 day, 2 hours" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-</div>
-
-                
-
-                <div class="form-group">
-                    <label for="markAsTaskEmail" class="block text-gray-700 font-medium mb-1">Task-Specific Email ID:</label>
-                    <input type="email" id="markAsTaskEmail" placeholder="Enter an email for this task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-
-                <!-- NEW: Upload Image -->
-                <div class="form-group">
-                    <label for="markAsTaskImageUpload" class="block text-gray-700 font-medium mb-1">Upload Image:</label>
-                    <input type="file" id="markAsTaskImageUpload" accept="image/*" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-
-                <!-- NEW: Add Comments -->
-                <div class="form-group">
-                    <label for="markAsTaskComments" class="block text-gray-700 font-medium mb-1">Comments:</label>
-                    <textarea id="markAsTaskComments" rows="3" placeholder="Add initial comments for this task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                </div>
-
-                <!-- NEW: Add Link -->
-                <div class="form-group">
-                    <label for="markAsTaskLink" class="block text-gray-700 font-medium mb-1">Related Link:</label>
-                    <input type="url" id="markAsTaskLink" placeholder="e.g., https://example.com/related-doc" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-
-                <!-- NEW: Parent Task ID -->
-                <div class="form-group">
-                    <label for="markAsTaskParentId" class="block text-gray-700 font-medium mb-1">Parent Task ID (if subtask):</label>
-                    <input type="text" id="markAsTaskParentId" placeholder="Enter ID of parent task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-
-                <div class="form-group">
-                    <label for="markAsTaskAddTo" class="block text-gray-700 font-medium mb-1">Add to:</label>
-                    <select id="markAsTaskAddTo" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                        <option value="personal">Personal Task List</option>
-                        <option value="gantt">Gantt Chart</option>
-                        <option value="note">Sticky Note</option>
-                    </select>
-                </div>
-                <!-- ⏱️ Timer and Checklist Section -->
-<hr class="my-4">
-
-<div class="form-group">
-  <label class="block text-gray-700 font-medium mb-1">Start Timer:</label>
-  <button type="button" id="startTimerBtn" class="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600">
-    <i class="fas fa-play mr-2"></i>Start Timer
-  </button>
-  <div id="liveTimerDisplay" class="mt-2 text-lg font-bold text-indigo-700">00:00:00</div>
-</div>
-
-<div class="form-group mt-4">
-  <label for="checklistInput" class="block text-gray-700 font-medium mb-1">Checklist:</label>
-  <div class="flex gap-2 mb-2">
-    <input type="text" id="checklistInput" placeholder="Add checklist item" class="flex-grow p-2 border border-gray-300 rounded">
-    <button type="button" id="addChecklistBtn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">Add</button>
-  </div>
-  <ul id="checklistItems" class="list-disc pl-5 text-gray-800 space-y-1">
-    <!-- checklist items go here -->
-  </ul>
-</div>
-
-                <button type="submit" class="w-full py-3 mt-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-200">Create Task</button>
-            </form>
-        </div>
-    </div>
-
-
     <!-- Custom Alert Modal (for "Task added successfully!") -->
     <div id="customAlertModal" class="custom-alert-modal">
         <div class="custom-alert-content">
@@ -1777,15 +1858,51 @@
         const customAlertMessage = document.getElementById('customAlertMessage');
         const customAlertCloseBtn = document.getElementById('customAlertCloseBtn');
 
-        function showCustomAlert(title, message) {
+        function showCustomAlert(title, message, callback = null, isConfirm = false) {
             customAlertTitle.textContent = title;
             customAlertMessage.textContent = message;
+            
+            // Remove previous event listeners to prevent multiple calls
+            customAlertCloseBtn.onclick = null;
+            
+            // Clear any existing "Cancel" button
+            const existingCancelBtn = customAlertModal.querySelector('.custom-alert-content button:last-child');
+            if (existingCancelBtn && existingCancelBtn.textContent === "Cancel") {
+                existingCancelBtn.remove();
+            }
+
+            if (isConfirm) {
+                // For confirmation, change button text and add a "Cancel" button
+                customAlertCloseBtn.textContent = "Confirm";
+                customAlertCloseBtn.className = "bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition duration-200 mr-2";
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = "Cancel";
+                cancelBtn.className = "bg-gray-400 text-white py-2 px-4 rounded-md hover:bg-gray-500 transition duration-200";
+                cancelBtn.onclick = () => {
+                    customAlertModal.style.display = 'none';
+                    // No callback for cancel
+                };
+                customAlertCloseBtn.parentNode.appendChild(cancelBtn);
+
+                customAlertCloseBtn.onclick = () => {
+                    customAlertModal.style.display = 'none';
+                    if (callback) callback();
+                    cancelBtn.remove(); // Clean up cancel button
+                };
+
+            } else {
+                // For simple alerts
+                customAlertCloseBtn.textContent = "OK";
+                customAlertCloseBtn.className = "bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-200";
+                customAlertCloseBtn.onclick = () => {
+                    customAlertModal.style.display = 'none';
+                    if (callback) callback();
+                };
+            }
+
             customAlertModal.style.display = 'block';
         }
-
-        customAlertCloseBtn.addEventListener('click', () => {
-            customAlertModal.style.display = 'none';
-        });
 
         window.addEventListener('click', (event) => {
             if (event.target == customAlertModal) {
@@ -1906,26 +2023,32 @@
         const contextMenuMarkAsTaskBtn = document.getElementById('contextMenuMarkAsTaskBtn');
         const contextMenuReplyBtn = document.getElementById('contextMenuReplyBtn');
         const contextMenuShareBtn = document.getElementById('contextMenuShareBtn');
-        const markAsTaskModal = document.getElementById('markAsTaskModal');
-        const closeMarkAsTaskModalBtn = document.getElementById('closeMarkAsTaskModalBtn');
-        const markAsTaskForm = document.getElementById('markAsTaskForm');
-        const markAsTaskTitle = document.getElementById('markAsTaskTitle');
-        const markAsTaskAssignTo = document.getElementById('markAsTaskAssignTo');
-        const markAsTaskEmail = document.getElementById('markAsTaskEmail');
+        // NEW: Chat multi-selection elements
+        // MODIFIED: Changed from checkbox to button
+        const chatSelectionToggleBtn = document.getElementById('chatSelectionToggleBtn'); 
+        const chatContainer = document.getElementById('chatContainer'); // Reference to the chat-container for class toggling
+        let selectedMessageBubbles = new Set(); // To store selected message elements
 
-        // NEW: Mark as Task Modal new fields
-        const markAsTaskIsSubtask = document.getElementById('markAsTaskIsSubtask');
-        const markAsTaskPriority = document.getElementById('markAsTaskPriority');
-        const markAsTaskCollaborators = document.getElementById('markAsTaskCollaborators');
-        const markAsTaskImageUpload = document.getElementById('markAsTaskImageUpload');
-        const markAsTaskComments = document.getElementById('markAsTaskComments');
-        const markAsTaskLink = document.getElementById('markAsTaskLink');
-        const markAsTaskParentId = document.getElementById('markAsTaskParentId');
+        // NEW: Assign Task from Chat Page elements
+        const assignTaskFromChatSection = document.getElementById('assignTaskFromChatSection');
+        const assignTaskFromChatForm = document.getElementById('assignTaskFromChatForm');
+        const assignTaskTitle = document.getElementById('assignTaskTitle');
+        const assignTaskPoints = document.getElementById('assignTaskPoints');
+        const assignTaskIsSubtask = document.getElementById('assignTaskIsSubtask');
+        const assignTaskPriority = document.getElementById('assignTaskPriority');
+        const assignTaskAssignTo = document.getElementById('assignTaskAssignTo');
+        // NEW: Collaborators dropdown elements
+        const collaboratorsDropdownTrigger = document.getElementById('collaboratorsDropdownTrigger');
+        const collaboratorsDropdownList = document.getElementById('collaboratorsDropdownList');
+        const collaboratorsSelectedNames = collaboratorsDropdownTrigger.querySelector('.selected-names');
 
-        // Checklist elements in markAsTaskModal
-        const checklistInput = document.getElementById("checklistInput");
-        const addChecklistBtn = document.getElementById("addChecklistBtn");
-        const checklistItemsUl = document.getElementById("checklistItems");
+        const assignTaskDate = document.getElementById('assignTaskDate');
+        const assignTaskEmail = document.getElementById('assignTaskEmail');
+        const assignTaskImageUpload = document.getElementById('assignTaskImageUpload');
+        const assignTaskComments = document.getElementById('assignTaskComments');
+        const assignTaskLink = document.getElementById('assignTaskLink');
+        const assignTaskParentId = document.getElementById('assignTaskParentId');
+        const assignTaskAddTo = document.getElementById('assignTaskAddTo');
 
 
         // Initialize the application
@@ -2013,6 +2136,10 @@
                 if (!messageContextMenu.contains(event.target)) {
                     messageContextMenu.style.display = 'none';
                 }
+                // Hide collaborators dropdown if clicking outside
+                if (collaboratorsDropdownList && !collaboratorsDropdownList.contains(event.target) && event.target !== collaboratorsDropdownTrigger) {
+                    collaboratorsDropdownList.classList.remove('show');
+                }
             });
             
             // Gantt view options
@@ -2029,6 +2156,12 @@
 
             // NEW: Chat-to-Task Event Listeners
             chatInputForm.addEventListener('submit', handleSendMessage);
+            // Multi-selection listeners
+            // MODIFIED: Listen to the button click instead of checkbox change
+            if (chatSelectionToggleBtn) {
+                chatSelectionToggleBtn.addEventListener('click', toggleChatSelectionMode);
+            }
+            chatMessagesEl.addEventListener('change', handleMessageCheckboxChange);
 
             // Context Menu Listener
             chatMessagesEl.addEventListener('contextmenu', showMessageContextMenu);
@@ -2037,39 +2170,20 @@
             contextMenuShareBtn.addEventListener('click', () => showCustomAlert('Share', 'Share functionality coming soon!'));
 
 
-            // Mark as Task Modal Listeners
-            closeMarkAsTaskModalBtn.addEventListener('click', () => markAsTaskModal.style.display = 'none');
-            markAsTaskForm.addEventListener('submit', handleCreateTaskFromChat);
-            window.addEventListener('click', (event) => {
-                if (event.target == markAsTaskModal) {
-                    markAsTaskModal.style.display = 'none';
-                }
-            });
+            // Assign Task from Chat Page Listener
+            assignTaskFromChatForm.addEventListener('submit', handleCreateTaskFromChat);
 
-            // Checklist functionality in Mark as Task Modal
-            if (addChecklistBtn) {
-                addChecklistBtn.addEventListener('click', () => {
-                    const value = checklistInput.value.trim();
-                    if (value) {
-                        const li = document.createElement("li");
-                        li.className = "flex items-center bg-gray-50 p-2 rounded-md"; // Added styling
-                        li.innerHTML = `
-                            <input type="checkbox" class="mr-2 h-4 w-4 accent-indigo-500">
-                            <span>${value}</span>
-                            <button class="ml-auto text-red-600 text-sm remove-item" title="Remove item">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        `;
-                        checklistItemsUl.appendChild(li);
-                        checklistInput.value = '';
-                    }
+            // Collaborators dropdown specific event listeners
+            if (collaboratorsDropdownTrigger) {
+                collaboratorsDropdownTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent click from immediately closing the dropdown
+                    collaboratorsDropdownList.classList.toggle('show');
                 });
             }
-
-            if (checklistItemsUl) {
-                checklistItemsUl.addEventListener("click", (e) => {
-                    if (e.target.closest(".remove-item")) {
-                        e.target.closest("li").remove();
+            if (collaboratorsDropdownList) {
+                collaboratorsDropdownList.addEventListener('change', (e) => {
+                    if (e.target.type === 'checkbox') {
+                        updateCollaboratorsDisplay();
                     }
                 });
             }
@@ -2100,7 +2214,7 @@
             try {
                 const usersSnapshot = await getDocs(collection(db, "users"));
                 const assignToSelects = [
-                    document.getElementById('markAsTaskAssignTo'),
+                    document.getElementById('assignTaskAssignTo'), // New assign task page dropdown
                     document.getElementById('ganttAssignedTo') // Add the new Gantt assignedTo dropdown
                 ];
 
@@ -2128,7 +2242,7 @@
             } catch (error) {
                 console.error("Error populating users dropdown: ", error);
                 const defaultOption = '<option value="">Could not load users</option>';
-                document.getElementById('markAsTaskAssignTo').innerHTML = defaultOption;
+                document.getElementById('assignTaskAssignTo').innerHTML = defaultOption;
                 document.getElementById('ganttAssignedTo').innerHTML = defaultOption;
             }
         }
@@ -2137,35 +2251,49 @@
         async function populateCollaboratorsDropdown() {
             try {
                 const usersSnapshot = await getDocs(collection(db, "users"));
-                const collaboratorsSelect = document.getElementById('markAsTaskCollaborators');
                 
-                if (collaboratorsSelect) {
-                    collaboratorsSelect.innerHTML = ''; // Clear existing options
+                if (collaboratorsDropdownList) {
+                    collaboratorsDropdownList.innerHTML = ''; // Clear existing options
                     
                     // Add 'Self' option
-                    const selfOption = document.createElement('option');
-                    selfOption.value = currentUser ? currentUser.uid : 'self'; // Use current user's UID or a placeholder
-                    selfOption.textContent = 'Self';
-                    selfOption.selected = true; // Select 'Self' by default
-                    collaboratorsSelect.appendChild(selfOption);
+                    const selfLabel = document.createElement('label');
+                    selfLabel.innerHTML = `
+                        <input type="checkbox" data-uid="${currentUser ? currentUser.uid : 'self'}" data-username="Self" checked class="mr-2">
+                        Self
+                    `;
+                    collaboratorsDropdownList.appendChild(selfLabel);
 
                     usersSnapshot.forEach((doc) => {
                         const user = doc.data();
                         // Only add other users if they are not the current user (to avoid duplication with 'Self')
                         if (currentUser && doc.id !== currentUser.uid) {
-                            const option = document.createElement('option');
-                            option.value = doc.id; // User UID
-                            option.textContent = user.username || 'Unnamed User';
-                            collaboratorsSelect.appendChild(option);
+                            const userLabel = document.createElement('label');
+                            userLabel.innerHTML = `
+                                <input type="checkbox" data-uid="${doc.id}" data-username="${user.username || 'Unnamed User'}" class="mr-2">
+                                ${user.username || 'Unnamed User'}
+                            `;
+                            collaboratorsDropdownList.appendChild(userLabel);
                         }
                     });
+                    updateCollaboratorsDisplay(); // Update display after populating
                 }
             } catch (error) {
                 console.error("Error populating collaborators dropdown: ", error);
-                const collaboratorsSelect = document.getElementById('markAsTaskCollaborators');
-                if (collaboratorsSelect) {
-                    collaboratorsSelect.innerHTML = '<option value="">Could not load users</option>';
+                if (collaboratorsDropdownList) {
+                    collaboratorsDropdownList.innerHTML = '<p class="p-2 text-gray-500">Could not load users</p>';
                 }
+            }
+        }
+
+        // NEW: Update the display of selected collaborators
+        function updateCollaboratorsDisplay() {
+            const selectedCheckboxes = collaboratorsDropdownList.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedNames = Array.from(selectedCheckboxes).map(checkbox => checkbox.dataset.username);
+            
+            if (selectedNames.length === 0) {
+                collaboratorsSelectedNames.textContent = 'Select Collaborators';
+            } else {
+                collaboratorsSelectedNames.textContent = selectedNames.join(', ');
             }
         }
         
@@ -2300,20 +2428,22 @@
         // NEW: Chat-to-Task functions
         function renderInitialChatMessages() {
             const initialMessages = [
-                { sender: 'Sarah Chen', text: 'We need to design the homepage by Monday.', time: '10:09 AM', avatar: 'https://placehold.co/40x40/f87171/ffffff?text=SC' },
-                { sender: 'You', text: 'Sounds good! Should we include the new branding elements?', time: '10:11 AM', avatar: localStorage.getItem("userAvatar") || "https://placehold.co/40x40/6366f1/ffffff?text=U", sent: true },
-                { sender: 'Mike Rodriguez', text: 'Yes, and we also need to optimize the mobile layout for better performance.', time: '10:12 AM', avatar: 'https://placehold.co/40x40/34d399/ffffff?text=MR' }
+                { id: 'msg1', sender: 'Sarah Chen', text: 'We need to design the homepage by Monday.', time: '10:09 AM', avatar: 'https://placehold.co/40x40/f87171/ffffff?text=SC' },
+                { id: 'msg2', sender: 'You', text: 'Sounds good! Should we include the new branding elements?', time: '10:11 AM', avatar: localStorage.getItem("userAvatar") || "https://placehold.co/40x40/6366f1/ffffff?text=U", sent: true },
+                { id: 'msg3', sender: 'Mike Rodriguez', text: 'New branding elements are a must. Also, ensure the mobile layout is optimized for performance.', time: '10:12 AM', avatar: 'https://placehold.co/40x40/34d399/ffffff?text=MR' }
             ];
             
             chatMessagesEl.innerHTML = '';
             initialMessages.forEach(msg => addMessageToChat(msg));
         }
 
-        function addMessageToChat({ sender, text, time, avatar, sent = false }) {
+        function addMessageToChat({ id, sender, text, time, avatar, sent = false }) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${sent ? 'sent' : ''}`;
-            
+            messageDiv.dataset.messageId = id; // Store message ID for selection
+
             messageDiv.innerHTML = `
+                <input type="checkbox" class="message-checkbox h-4 w-4 text-indigo-600 rounded">
                 <img src="${avatar}" alt="avatar" class="avatar">
                 <div class="message-content">
                     <div class="message-sender">${sender}</div>
@@ -2331,6 +2461,7 @@
             const text = chatInput.value.trim();
             if (text) {
                 const message = {
+                    id: `msg${Date.now()}`, // Simple unique ID
                     sender: 'You',
                     text: text,
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -2361,40 +2492,101 @@
             const messageText = messageContextMenu.dataset.messageText;
             if (!messageText) return;
 
-            markAsTaskTitle.value = messageText;
-            markAsTaskModal.style.display = 'block';
-            messageContextMenu.style.display = 'none';
+            assignTaskTitle.value = messageText; // Pre-fill the title on the new page
+            showSection('assignTaskFromChatSection'); // Navigate to the new page
+            messageContextMenu.style.display = 'none'; // Hide context menu
+        }
+
+        // NEW: Multi-selection functions
+        // MODIFIED: This function now toggles the selection mode
+        function toggleChatSelectionMode() {
+            const messageCheckboxes = chatMessagesEl.querySelectorAll('.message-checkbox');
+            const isSelectMode = chatSelectionToggleBtn.textContent === 'Select';
+
+            if (isSelectMode) {
+                // Entering selection mode
+                chatContainer.classList.add('chat-selection-mode');
+                chatSelectionToggleBtn.textContent = 'Select All';
+                selectedMessageBubbles.clear(); // Clear any previous selections
+                messageCheckboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.closest('.chat-message').classList.remove('selected');
+                });
+            } else {
+                // Currently in "Select All" mode, meaning it's acting as a toggle for all checkboxes
+                const allChecked = selectedMessageBubbles.size === messageCheckboxes.length;
+                messageCheckboxes.forEach(checkbox => {
+                    checkbox.checked = !allChecked;
+                    const messageDiv = checkbox.closest('.chat-message');
+                    if (!allChecked) {
+                        messageDiv.classList.add('selected');
+                        selectedMessageBubbles.add(messageDiv);
+                    } else {
+                        messageDiv.classList.remove('selected');
+                        selectedMessageBubbles.delete(messageDiv);
+                    }
+                });
+                // If all were selected and now unselected, revert to "Select" mode
+                if (allChecked) {
+                    chatContainer.classList.remove('chat-selection-mode');
+                    chatSelectionToggleBtn.textContent = 'Select';
+                    selectedMessageBubbles.clear();
+                }
+            }
+        }
+
+        function handleMessageCheckboxChange(e) {
+            if (e.target.classList.contains('message-checkbox')) {
+                const checkbox = e.target;
+                const messageDiv = checkbox.closest('.chat-message');
+
+                if (checkbox.checked) {
+                    messageDiv.classList.add('selected');
+                    selectedMessageBubbles.add(messageDiv);
+                } else {
+                    messageDiv.classList.remove('selected');
+                    selectedMessageBubbles.delete(messageDiv);
+                }
+
+                // If all messages are now selected, update the header button to "Deselect All"
+                // If some are selected, keep it as "Select All" (or "Deselect All" if all were already selected)
+                const allCheckboxes = chatMessagesEl.querySelectorAll('.message-checkbox');
+                if (selectedMessageBubbles.size === allCheckboxes.length && allCheckboxes.length > 0) {
+                    chatSelectionToggleBtn.textContent = 'Deselect All';
+                } else if (selectedMessageBubbles.size > 0) {
+                    chatSelectionToggleBtn.textContent = 'Select All'; // If some are selected but not all
+                } else {
+                    // If no messages are selected, and we are in selection mode, keep "Select All"
+                    // If we exit selection mode, it will reset to "Select"
+                    if (chatContainer.classList.contains('chat-selection-mode')) {
+                         chatSelectionToggleBtn.textContent = 'Select All';
+                    } else {
+                        // This case should ideally not happen if selection mode is properly managed
+                        chatSelectionToggleBtn.textContent = 'Select';
+                    }
+                }
+            }
         }
         
         async function handleCreateTaskFromChat(e) {
             e.preventDefault();
 
-            const title = markAsTaskTitle.value;
-            const isSubtask = markAsTaskIsSubtask.checked;
-            const priority = markAsTaskPriority.value;
-            const assignedTo = markAsTaskAssignTo.value;
-            const collaborators = Array.from(markAsTaskCollaborators.selectedOptions).map(option => option.value);
-            const dueDate = markAsTaskDate.value;
-            const taskEmail = markAsTaskEmail.value;
-            const imageFile = markAsTaskImageUpload.files[0]; // Get the selected image file
-            const comments = markAsTaskComments.value;
-            const relatedLink = markAsTaskLink.value;
-            const parentTaskId = markAsTaskParentId.value.trim();
-            const addTo = document.getElementById('markAsTaskAddTo').value;
+            const title = assignTaskTitle.value;
+            const isSubtask = assignTaskIsSubtask.checked;
+            const priority = assignTaskPriority.value;
+            const assignedTo = assignTaskAssignTo.value;
+            // Get selected collaborators from checkboxes
+            const selectedCollaboratorCheckboxes = collaboratorsDropdownList.querySelectorAll('input[type="checkbox"]:checked');
+            const collaborators = Array.from(selectedCollaboratorCheckboxes).map(checkbox => checkbox.dataset.uid);
 
-            // Collect checklist items from the modal's UL
-            const checklistItems = [];
-            checklistItemsUl.querySelectorAll('li').forEach((li, index) => {
-                const checkbox = li.querySelector('input[type="checkbox"]');
-                const textSpan = li.querySelector('span');
-                if (textSpan) {
-                    checklistItems.push({
-                        text: textSpan.textContent.trim(),
-                        completed: checkbox ? checkbox.checked : false,
-                        index: index // Store index for potential future use
-                    });
-                }
-            });
+            const dueDate = assignTaskDate.value;
+            const taskEmail = assignTaskEmail.value;
+            const imageFile = assignTaskImageUpload.files[0]; // Get the selected image file
+            const comments = assignTaskComments.value;
+            const relatedLink = assignTaskLink.value;
+            const parentTaskId = assignTaskParentId.value.trim();
+            const addTo = assignTaskAddTo.value;
+            const taskPoints = parseInt(assignTaskPoints.value) || 0;
 
 
             if (!currentUser || !title || !dueDate || !assignedTo) {
@@ -2434,11 +2626,10 @@
                     dueDate: `${dueDate}T23:59`, // Set time to end of day
                     ganttStartDate: ganttStartDate, // For Gantt chart
                     status: 'pending',
-                    progress: 0, // Default progress for new tasks
-                    points: 0,
+                    progress: 0, // Default progress for new tasks (was initialProgress)
+                    points: taskPoints, // Use points from the form
                     comments: comments ? [{ text: comments, by: createdByUsername, createdAt: serverTimestamp() }] : [], // NEW FIELD (array of objects)
                     notes: [], // Initialize notes array
-                    checklist: checklistItems, // NEW FIELD: Add the collected checklist items
                     createdBy: createdByUsername,
                     assignedTo: assignedTo,
                     collaborators: collaborators, // NEW FIELD (array of UIDs)
@@ -2446,6 +2637,9 @@
                     imageUrl: imageUrl, // NEW FIELD
                     relatedLink: relatedLink, // NEW FIELD
                     parentTaskId: parentTaskId, // NEW FIELD
+                    estimatedDuration: 0, // REMOVED: estimatedDuration
+                    taskLocation: '', // REMOVED: taskLocation
+                    difficultyRating: 0, // REMOVED: difficultyRating
                     createdAt: serverTimestamp(),
                     isLocked: false,
                     lockUntil: null,
@@ -2459,9 +2653,14 @@
 
                 await addDoc(collection(db, "forms"), taskData);
 
-                markAsTaskForm.reset();
-                checklistItemsUl.innerHTML = ''; // Clear checklist items after submission
-                markAsTaskModal.style.display = 'none';
+                assignTaskFromChatForm.reset();
+                // Reset collaborators dropdown display
+                if (collaboratorsDropdownList) {
+                    collaboratorsDropdownList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+                    updateCollaboratorsDisplay();
+                }
+
+
                 showCustomAlert("Success", "Task created successfully!");
                 
                 // NEW: Navigate to the relevant section
@@ -2522,7 +2721,6 @@
                     points: taskPoints,
                     comments: [],
                     notes: [], // Initialize notes as an empty array
-                    checklist: [], // Initialize checklist as an empty array for this form
                     createdBy: createdByUsername,
                     assignedTo: assignedToUserId,
                     isSubtask: false, // Default for main task form
@@ -2530,6 +2728,9 @@
                     imageUrl: '', // Default for main task form
                     relatedLink: '', // Default for main task form
                     parentTaskId: '', // Default for main task form
+                    estimatedDuration: 0, // Default to 0 for main task form
+                    taskLocation: '', // Default to empty for main task form
+                    difficultyRating: 0, // Default to 0 for main task form
                     createdAt: serverTimestamp(),
                     isLocked: false,
                     lockUntil: null,
@@ -2585,7 +2786,6 @@
                     points: 0, // Default points
                     comments: [],
                     notes: [],
-                    checklist: [], // Initialize checklist as an empty array for this form
                     createdBy: createdByUsername,
                     assignedTo: assignedTo, // The selected assignee
                     isSubtask: false, // Default for Gantt task form
@@ -2593,10 +2793,13 @@
                     imageUrl: '', // Default for Gantt task form
                     relatedLink: '', // Default for Gantt task form
                     parentTaskId: '', // Default for Gantt task form
+                    estimatedDuration: 0, // Default to 0 for Gantt task form
+                    taskLocation: '', // Default to empty for Gantt task form
+                    difficultyRating: 0, // Default to 0 for Gantt task form
                     createdAt: serverTimestamp(),
                     isLocked: false,
                     lockUntil: null,
-                    dependencies: dependencies // Save dependencies
+                    dependencies: '' // Initialize dependencies as empty string
                 });
 
                 addGanttTaskForm.reset();
@@ -3298,9 +3501,9 @@
                                 const button = e.currentTarget;
                                 const taskId = button.dataset.taskId;
                                 const noteIndex = parseInt(button.dataset.noteIndex, 10);
-                                handleDeleteNote(taskId, noteIndex);
-                                // Optimistically hide the note element
-                                button.closest('li').style.display = 'none'; 
+                                showCustomAlert("Confirm Delete", "Are you sure you want to delete this note?", () => {
+                                    handleDeleteNote(taskId, noteIndex);
+                                }, true);
                             });
                         });
                         
@@ -3363,6 +3566,12 @@
             // Start or stop sparkle animation based on section
             if (sectionId === 'chatSection') {
                 startSparkleAnimation();
+                // NEW: Reset chat selection mode when entering chat section
+                chatContainer.classList.remove('chat-selection-mode');
+                chatSelectionToggleBtn.textContent = 'Select';
+                selectedMessageBubbles.clear();
+                chatMessagesEl.querySelectorAll('.message-checkbox').forEach(cb => cb.checked = false);
+                chatMessagesEl.querySelectorAll('.chat-message').forEach(msg => msg.classList.remove('selected'));
             } else {
                 stopSparkleAnimation();
             }
@@ -3522,80 +3731,48 @@
                         ? `<p class="flex items-center"><i class="fas fa-envelope mr-2 text-indigo-500"></i> Task Email: <span class="font-medium text-gray-700">${task.taskSpecificEmail}</span></p>`
                         : '';
 
-                    const checklistHtml = task.checklist && task.checklist.length > 0
-                        ? `<ul class="space-y-2 text-gray-800">
-                            ${task.checklist.map((item, index) => `
-                                <li class="flex items-center bg-gray-50 p-2 rounded-md">
-                                    <input type="checkbox" class="mr-2 h-4 w-4 accent-indigo-500" ${item.completed ? 'checked' : ''} data-task-id="${task.id}" data-item-index="${index}">
-                                    <span class="${item.completed ? 'line-through text-gray-500' : ''}">${item.text}</span>
-                                </li>
-                            `).join('')}
-                        </ul>`
-                        : '<p class="text-sm text-gray-500">No checklist items.</p>';
 
-                     taskCard.innerHTML = `
-  <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
-    <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
-    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
-  </div>
+                    taskCard.innerHTML = `
+                        <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
+                            <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
+                            <div class="flex items-center">
+                                <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
+                                ${flagIcon}
+                            </div>
+                        </div>
+                        ${lockIcon}
+                        <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
+                        <div class="text-sm text-gray-500 space-y-1 mb-4">
+                            <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
+                            <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
+                            <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
+                            <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
+                            ${emailHtml}
+                            <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
+                            <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
+                            <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
+                            ${subtaskHtml}
+                            ${parentTaskHtml}
+                            ${collaboratorsHtml}
+                            ${imageUrlHtml}
+                            ${relatedLinkHtml}
 
-  <div class="task-details mt-2 pl-2 text-gray-700 hidden">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Column 1 & 2 (Description and other primary details) -->
-        <div class="md:col-span-2">
-            <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
-                <div class="flex items-center">
-                    <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
-                    ${flagIcon}
-                </div>
-            </div>
-            ${lockIcon}
-            <h4 class="text-lg font-semibold mb-2">Description:</h4>
-            <p class="text-base text-gray-800 mb-4">${task.description || 'No description provided.'}</p>
-
-            <div class="text-sm text-gray-500 space-y-1 mb-4">
-                <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
-                <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
-                <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
-                <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
-                ${emailHtml}
-                <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
-                <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
-                <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
-                ${subtaskHtml}
-                ${parentTaskHtml}
-                ${collaboratorsHtml}
-                ${imageUrlHtml}
-                ${relatedLinkHtml}
-            </div>
-
-            <!-- Notes Section (as is, but within col-span-2) -->
-            <div class="gantt-popup-notes">
-                <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
-                ${notesHtml}
-                <div class="gantt-popup-add-note mt-2">
-                    <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
-                    <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
-                </div>
-            </div>
-            ${commentsHtml}
-        </div>
-
-        <!-- Column 3 (Checklist) -->
-        <div>
-            <h4 class="text-lg font-semibold mb-2 flex items-center"><i class="fas fa-clipboard-check mr-2 text-indigo-500"></i>Checklist:</h4>
-            ${checklistHtml}
-        </div>
-    </div>
-    <div class="task-actions flex flex-wrap gap-2 mt-4">
-        ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
-        ${completeButtonHTML}
-        ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
-    </div>
-  </div>
-`;
-
-                    
+                            <div class="gantt-popup-notes">
+                                <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
+                                ${notesHtml}
+                                <div class="gantt-popup-add-note mt-2">
+                                    <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
+                                    <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
+                                </div>
+                            </div>
+                            ${commentsHtml}
+                        </div>
+                        <div class="task-actions flex flex-wrap gap-2 mt-4">
+                            ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
+                            ${completeButtonHTML}
+                            ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
+                        </div>
+                    `;
                     myTasksListContainerEl.appendChild(taskCard);
                     
                     const addMyTasksNoteBtn = document.getElementById(`addMyTasksNoteBtn-${task.id}`);
@@ -3677,36 +3854,6 @@
                 btn.addEventListener('click', () => {
                     const taskId = btn.dataset.id;
                     showCustomAlert("Edit Task", `Editing task with ID: ${taskId}. (Functionality to be implemented)`);
-                });
-            });
-
-            // Event listener for checklist item checkboxes
-            document.querySelectorAll('.task-details input[type="checkbox"][data-item-index]').forEach(checkbox => {
-                checkbox.addEventListener('change', async (e) => {
-                    const taskId = e.target.dataset.taskId;
-                    const itemIndex = parseInt(e.target.dataset.itemIndex, 10);
-                    const isChecked = e.target.checked;
-
-                    const taskRef = doc(db, 'forms', taskId);
-                    try {
-                        const taskDoc = await getDoc(taskRef);
-                        if (taskDoc.exists()) {
-                            const taskData = taskDoc.data();
-                            const checklist = [...(taskData.checklist || [])]; // Create a mutable copy
-
-                            if (itemIndex >= 0 && itemIndex < checklist.length) {
-                                checklist[itemIndex].completed = isChecked;
-                                await updateDoc(taskRef, { checklist: checklist });
-                                // Update the UI immediately for visual feedback
-                                e.target.nextElementSibling.classList.toggle('line-through', isChecked);
-                                e.target.nextElementSibling.classList.toggle('text-gray-500', isChecked);
-                                showCustomAlert("Checklist Updated", "Checklist item status updated.");
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Error updating checklist item:", error);
-                        showCustomAlert("Error", "Failed to update checklist item: " + error.message);
-                    }
                 });
             });
         }
@@ -3806,111 +3953,105 @@
         setInterval(updateCurrentDate, 60000);
     </script>
     <script>
-let timerInterval = null;  // ✅ declared only once
-let startTime = null;
-let totalSeconds = 0;
+let timerInterval;
+let secondsElapsed = 0;
 
-// ✅ Check if the current time is within allowed working hours
-function isWorkingHour() {
-    const now = new Date();
-    const hour = now.getHours();
+// Timer and Checklist for the main Add Task form
+document.getElementById("startTimerBtn")?.addEventListener("click", () => {
+  clearInterval(timerInterval);
+  secondsElapsed = 0;
+  updateTimerDisplay("liveTimerDisplay");
 
-    if (hour === 13) {
-        return 'lunch';
-    }
-
-    if ((hour >= 9 && hour < 13) || (hour >= 14 && hour < 18)) {
-        return true;
-    }
-
-    return false;
-}
-
-// ✅ Update the timer display in HH:MM:SS format
-function updateTimerDisplay() {
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-    const seconds = String(totalSeconds % 60).padStart(2, '0');
-    document.getElementById('liveTimerDisplay').textContent = `${hours}:${minutes}:${seconds}`;
-}
-
-// ✅ Timer Start Button Handler
-document.getElementById('startTimerBtn').addEventListener('click', function () {
-    // Stop any previous timer
-    if (timerInterval) {
-        clearInterval(timerInterval);
-    }
-
-    const status = isWorkingHour();
-
-    if (status === 'lunch') {
-        document.getElementById('liveTimerDisplay').textContent = 'Lunch Break 🍱';
-        return;
-    }
-
-    if (status === false) {
-        document.getElementById('liveTimerDisplay').textContent = 'Outside working hours 🚫';
-        return;
-    }
-
-    // Start tracking time
-    timerInterval = setInterval(() => {
-        const checkNow = isWorkingHour();
-
-        if (checkNow === 'lunch') {
-            document.getElementById('liveTimerDisplay').textContent = 'Lunch Break 🍱';
-            return;
-        }
-
-        if (checkNow === false) {
-            document.getElementById('liveTimerDisplay').textContent = 'Outside working hours 🚫';
-            clearInterval(timerInterval);
-            return;
-        }
-
-        totalSeconds++;
-        updateTimerDisplay();
-    }, 1000);
+  timerInterval = setInterval(() => {
+    secondsElapsed++;
+    updateTimerDisplay("liveTimerDisplay");
+  }, 1000);
 });
-</script>
-<script>
-  // Dummy task data for now – replace with real data later
-  const tasks = [
-    { title: "chat", priority: "Medium", status: "Completed" },
-    { title: "sunil", priority: "Medium", status: "Completed" },
-    { title: "add image and text", priority: "Medium", status: "Completed" },
-  ];
 
-  const container = document.getElementById("myTasksListContainer");
-  // Ensure this script runs after the main app logic has initialized myTasksListContainer
-  // This dummy data rendering will be overwritten by the Firebase data in renderMyTasks()
-  // if (container) {
-  //   container.innerHTML = ""; // Clear old task cards
-  //   tasks.forEach(task => {
-  //     const taskItem = document.createElement("div");
-  //     taskItem.className = "flex items-center justify-between bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm";
-
-  //     taskItem.innerHTML = `
-  //       <div class="flex items-center gap-3">
-  //         <input type="checkbox" class="h-5 w-5 accent-indigo-500 rounded-full">
-  //         <span class="text-base font-medium">${task.title}</span>
-  //       </div>
-  //       <button>
-  //         <i class="far fa-star text-gray-400 hover:text-yellow-400"></i>
-  //       </button>
-  //     `;
-
-  //     container.appendChild(taskItem);
-  //   });
-  // }
-
-  function toggleTaskDetails(headerElement) {
-    const details = headerElement.nextElementSibling;
-    if (details) {
-      details.classList.toggle('hidden');
-    }
+document.getElementById("addChecklistBtn")?.addEventListener("click", () => {
+  const input = document.getElementById("checklistInput");
+  const value = input.value.trim();
+  if (value) {
+    const li = document.createElement("li");
+    li.innerHTML = `<input type="checkbox" class="mr-2">${value} <button class="ml-2 text-red-600 text-sm remove-item">×</button>`;
+    document.getElementById("checklistItems").appendChild(li);
+    input.value = '';
   }
+});
 
+document.getElementById("checklistItems")?.addEventListener("click", (e) => {
+  if (e.target.classList.contains("remove-item")) {
+    e.target.closest("li").remove();
+  }
+});
+
+// Timer and Checklist for the new Assign Task From Chat form
+let timerIntervalAssign;
+let secondsElapsedAssign = 0;
+
+document.getElementById("startTimerBtnAssign")?.addEventListener("click", () => {
+  clearInterval(timerIntervalAssign);
+  secondsElapsedAssign = 0;
+  updateTimerDisplay("liveTimerDisplayAssign");
+
+  timerIntervalAssign = setInterval(() => {
+    secondsElapsedAssign++;
+    updateTimerDisplay("liveTimerDisplayAssign");
+  }, 1000);
+});
+
+document.getElementById("addChecklistBtnAssign")?.addEventListener("click", () => {
+  const input = document.getElementById("checklistInputAssign");
+  const value = input.value.trim();
+  if (value) {
+    const li = document.createElement("li");
+    // MODIFIED: Added flexbox classes to the li element for proper alignment
+    li.className = "flex items-center justify-between"; // Ensure content is in one line and spaced
+    li.innerHTML = `
+      <div class="flex items-center">
+        <input type="checkbox" class="mr-2">
+        <span class="text-gray-800">${value}</span>
+      </div>
+      <button class="ml-2 text-red-600 text-sm remove-item">×</button>
+    `;
+    document.getElementById("checklistItemsAssign").appendChild(li);
+    input.value = '';
+  }
+});
+
+document.getElementById("checklistItemsAssign")?.addEventListener("click", (e) => {
+  if (e.target.classList.contains("remove-item")) {
+    e.target.closest("li").remove();
+  }
+});
+
+// Toggle Checklist Items for Assign Task From Chat form
+document.getElementById("toggleChecklistItemsBtnAssign")?.addEventListener("click", () => {
+    const checklistItems = document.getElementById("checklistItemsAssign");
+    const toggleIcon = document.getElementById("toggleChecklistIconAssign");
+    const toggleText = document.getElementById("toggleChecklistTextAssign");
+
+    if (checklistItems.classList.contains("hidden")) {
+        checklistItems.classList.remove("hidden");
+        toggleIcon.classList.remove("fa-chevron-up");
+        toggleIcon.classList.add("fa-chevron-down");
+        toggleText.textContent = "Show Checklist Items";
+    } else {
+        checklistItems.classList.add("hidden");
+        toggleIcon.classList.remove("fa-chevron-down");
+        toggleIcon.classList.add("fa-chevron-up");
+        toggleText.textContent = "Hide Checklist Items";
+    }
+});
+
+
+function updateTimerDisplay(displayId) {
+  const targetSeconds = (displayId === "liveTimerDisplay") ? secondsElapsed : secondsElapsedAssign;
+  const hrs = String(Math.floor(targetSeconds / 3600)).padStart(2, '0');
+  const mins = String(Math.floor((targetSeconds % 3600) / 60)).padStart(2, '0');
+  const secs = String(targetSeconds % 60).padStart(2, '0');
+  document.getElementById(displayId).textContent = `${hrs}:${mins}:${secs}`;
+}
 </script>
 
 </body>
