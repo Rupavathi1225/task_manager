@@ -8,12 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FullCalendar CSS -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- jQuery Gantt plugin CSS & JS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.gantt/1.2.1/css/style.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-gantt/1.2.1/js/jquery.fn.gantt.js"></script>
+    <!-- Frappe Gantt CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsgantt-improved/dist/jsgantt.css" />
+<script src="https://cdn.jsdelivr.net/npm/jsgantt-improved/dist/jsgantt.js"></script>
 
     
     <!-- Tailwind CSS CDN -->
@@ -236,17 +234,19 @@
         /* My Tasks Overview Section specific styles */
         
     .tasks-list-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      padding: 1rem 0;
-    }
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
 
-    .task-card {
-        min-width: 300px;
-        flex: 0 0 auto;
-        scroll-snap-align: start;
-    }
+
+.task-card {
+    min-width: 300px;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+}
+
 
         .task-card {
             background: white;
@@ -471,11 +471,6 @@
         }
         
         .widget-action-btn {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .widget-action-btn {
             background: none;
             border: none;
             color: #6b7280;
@@ -689,6 +684,218 @@
             transform: translateX(26px);
         }
         
+        /* Gantt Chart Styles */
+        .gantt-chart-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            margin-top: 1.5rem;
+            height: 600px; /* Fixed height for Gantt chart, with overflow */
+            overflow: auto;
+        }
+        
+        .gantt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 1rem; /* Space between elements */
+        }
+        
+        .gantt-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .gantt-control-btn {
+            background-color: #e2e8f0;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .gantt-control-btn:hover {
+            background-color: #4f46e5;
+            color: white;
+        }
+        
+        .gantt-view-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .gantt-view-btn {
+            background-color: #f3f4f6;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .gantt-view-btn.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        
+        .gantt-view-btn:hover:not(.active) {
+            background-color: #e2e8f0;
+        }
+        
+        .gantt-filter-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .gantt-filter {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+        
+        .gantt-filter label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #374151;
+        }
+        
+        .gantt-filter select, .gantt-filter input[type="text"] { /* Added input for search */
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            background-color: white;
+        }
+
+        /* Styles for Gantt Popup notes */
+        .gantt-popup-notes {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .gantt-popup-notes h6 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .gantt-popup-notes ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 100px;
+            overflow-y: auto;
+            margin-bottom: 0.5rem;
+        }
+
+        /* MODIFICATION: Added flex styles to note items */
+        .gantt-popup-notes li {
+            background-color: #fffbe6; /* Light yellow for sticky notes */
+            border: 1px solid #fde68a;
+            padding: 0.5rem;
+            margin-bottom: 0.4rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: #78350f;
+            word-wrap: break-word;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .gantt-popup-add-note {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .gantt-popup-add-note input {
+            flex-grow: 1;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
+
+        .gantt-popup-add-note button {
+            padding: 0.5rem 1rem;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* New CSS for Gantt Chart Task Bar Colors */
+        .gantt-completed .bar {
+            fill: #10b981 !important; /* Green for completed */
+        }
+        .gantt-pending .bar {
+            fill: #f59e0b !important; /* Yellow for pending */
+        }
+        .gantt-active .bar {
+            fill: #6b7280 !important; /* Gray for active/in-progress */
+        }
+        .gantt-overdue .bar {
+            fill: #ef4444 !important; /* Red for overdue */
+        }
+        /* Style for critical path tasks */
+        .gantt-critical .bar-progress {
+            fill: #dc2626 !important; /* Darker red for critical path progress */
+        }
+        .gantt-critical .bar {
+            fill: #ef4444 !important; /* Red for critical path bar */
+            stroke: #b91c1c !important; /* Darker red border */
+            stroke-width: 2px;
+        }
+
+
+        /* MODIFICATION: Style for delete button inside notes */
+        .delete-note-btn {
+            background: none;
+            border: none;
+            color: #ef4444; /* red-500 */
+            cursor: pointer;
+            padding: 0 0.5rem;
+            font-size: 0.8rem;
+        }
+        .delete-note-btn:hover {
+            color: #dc2626; /* red-600 */
+        }
+
+        /* NEW: Styles for status tags */
+        .status-tag {
+            padding: 4px 12px;
+            border-radius: 9999px; /* pill shape */
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: capitalize;
+            display: inline-block;
+        }
+        .status-completed {
+            background-color: #d1fae5; /* Tailwind green-100 */
+            color: #065f46; /* Tailwind green-800 */
+        }
+        .status-pending {
+            background-color: #fef3c7; /* Tailwind yellow-100 */
+            color: #92400e; /* Tailwind yellow-800 */
+        }
+        .status-active {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            color: #4b5563; /* Tailwind gray-600 */
+        }
+        .status-overdue {
+            background-color: #fee2e2; /* Tailwind red-100 */
+            color: #991b1b; /* Tailwind red-800 */
+        }
+        
         /* MODIFIED: Chat-to-Task System Styles for Sparkle Background */
         .chat-container {
             position: relative; /* Needed for positioning the canvas */
@@ -839,73 +1046,6 @@
             background-color: #f1f5f9;
         }
 
-        /* Status tags */
-        .status-tag {
-            padding: 4px 12px;
-            border-radius: 9999px; /* pill shape */
-            font-size: 0.8em;
-            font-weight: 600;
-            text-transform: capitalize;
-            display: inline-block;
-        }
-        .status-completed {
-            background-color: #d1fae5; /* Tailwind green-100 */
-            color: #065f46; /* Tailwind green-800 */
-        }
-        .status-pending {
-            background-color: #fef3c7; /* Tailwind yellow-100 */
-            color: #92400e; /* Tailwind yellow-800 */
-        }
-        .status-active {
-            background-color: #e5e7eb; /* Tailwind gray-200 */
-            color: #4b5563; /* Tailwind gray-600 */
-        }
-        .status-overdue {
-            background-color: #fee2e2; /* Tailwind red-100 */
-            color: #991b1b; /* Tailwind red-800 */
-        }
-        
-        /* --- GANTT CHART STYLES --- */
-        .gantt-container {
-            overflow-x: auto;
-        }
-        .gantt {
-            width: 100%;
-        }
-        .gantt .bar .bar-inner {
-            border-radius: 3px;
-            opacity: 0.8;
-            transition: opacity 0.2s ease;
-        }
-        .gantt .bar .bar-inner:hover {
-            opacity: 1;
-        }
-        .gantt .bar-label {
-            color: white;
-            font-weight: bold;
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding-left: 5px;
-        }
-        /* Custom colors for task bars */
-        .ganttRed .bar-inner {
-            background-color: #ef4444; /* Red for High Priority/Overdue */
-        }
-        .ganttOrange .bar-inner {
-            background-color: #f97316; /* Orange for Medium Priority */
-        }
-        .ganttGreen .bar-inner {
-            background-color: #22c55e; /* Green for Completed */
-        }
-        .ganttBlue .bar-inner {
-            background-color: #3b82f6; /* Blue for Low Priority */
-        }
-        .ganttGray .bar-inner {
-             background-color: #6b7280; /* Gray for other statuses */
-        }
-
     </style>
 </head>
 <body>
@@ -927,12 +1067,9 @@
         <div class="nav-pills flex-grow" id="mainNav">
             <button class="nav-btn" id="adminBtn"><i class="fas fa-user-shield"></i><span>Admin</span></button>
             <button class="nav-btn" data-section="dashboardSection"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></button>
-            <button class="nav-btn" data-section="chatSection"><i class="fas fa-comments"></i><span>Chat</span></button>
-            <button class="nav-btn" data-section="ganttChartSection">
-                <i class="fas fa-project-diagram"></i>
-                <span>Gantt Chart</span>
-            </button>
+            <button class="nav-btn" data-section="chatSection"><i class="fas fa-comments"></i><span>Chat</span></button> <!-- NEW -->
             <button class="nav-btn" data-section="calendarSection"><i class="fas fa-calendar-week"></i><span>Calendar View</span></button>
+            <button class="nav-btn" data-section="ganttSection"><i class="fas fa-chart-bar"></i><span>Gantt Chart</span></button>
             <button class="nav-btn" data-section="myTasksOverviewSection"><i class="fas fa-list-check"></i><span>My Tasks</span></button>
             <button class="nav-btn" data-section="taskNameSection"><i class="fas fa-plus-circle"></i><span>Add Task</span></button>
             <button class="nav-btn" data-section="confirmTaskSection"><i class="fas fa-tasks"></i><span>Confirm Tasks <span class="notification-badge bg-red-500 text-white rounded-full px-2 py-1 text-xs ml-2" id="pendingBadge">0</span></span></button>
@@ -1077,7 +1214,7 @@
             </section>
         </section>
 
-        <!-- Chat-to-Task System Section -->
+        <!-- NEW: Chat-to-Task System Section -->
         <section id="chatSection" class="section">
             <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
                 <i class="fas fa-comments mr-3 text-indigo-500"></i> Chat-to-Task System
@@ -1098,18 +1235,83 @@
                 </div>
             </div>
         </section>
-        
+
+
         <!-- Gantt Chart Section -->
-        <section id="ganttChartSection" class="section">
+        <section id="ganttSection" class="section">
             <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
-                <i class="fas fa-project-diagram mr-3 text-blue-600"></i> Project Gantt Chart
+                <i class="fas fa-chart-bar mr-3 text-purple-500"></i> Task Gantt Chart
             </h2>
-            <div class="gantt-container bg-white p-6 rounded-lg shadow-lg">
-                <div class="gantt"></div>
+            
+            <div class="gantt-header">
+                <div class="gantt-controls">
+                    <!-- ADDITION: "Add Task" button for Gantt Chart -->
+                    <button class="gantt-control-btn" id="addNewGanttTaskBtn">
+                        <i class="fas fa-plus"></i> Add Task
+                    </button>
+                    <button class="gantt-control-btn" id="refreshGanttBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="gantt-control-btn" id="fitGanttBtn">
+                        <i class="fas fa-expand"></i> Fit to Screen
+                    </button>
+                    <button class="gantt-control-btn" id="toggleCriticalPathBtn">
+                        <i class="fas fa-route"></i> Critical Path
+                    </button>
+                </div>
+                
+                <div class="gantt-view-options">
+                    <button class="gantt-view-btn" data-view="Quarter Day">Quarter Day</button>
+                    <button class="gantt-view-btn" data-view="Half Day">Half Day</button>
+                    <button class="gantt-view-btn active" data-view="Day">Day</button>
+                    <button class="gantt-view-btn" data-view="Week">Week</button>
+                    <button class="gantt-view-btn" data-view="Month">Month</button>
+                </div>
+            </div>
+            
+            <div class="gantt-filter-container">
+                <div class="gantt-filter">
+                    <label for="priorityFilter">Filter by Priority:</label>
+                    <select id="priorityFilter">
+                        <option value="all">All Priorities</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium">Medium Priority</option>
+                        <option value="Low">Low Priority</option>
+                    </select>
+                </div>
+                
+                <div class="gantt-filter">
+                    <label for="statusFilter">Filter by Status:</label>
+                    <select id="statusFilter">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+
+                 <div class="gantt-filter">
+                    <label for="assigneeFilter">Filter by Assignee:</label>
+                    <select id="assigneeFilter">
+                        <option value="all">All Assignees</option>
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+
+                 <div class="gantt-filter">
+                    <label for="ganttSearch">Search Tasks:</label>
+                    <input type="text" id="ganttSearch" placeholder="Search task name...">
+                </div>
+            </div>
+            
+            <div class="gantt-chart-container">
+                <div id="ganttChart" style="width:100%; height:600px;"></div>
+
             </div>
         </section>
 
-        <!-- Calendar Section -->
+        <!-- Other sections remain the same as before -->
         <section id="calendarSection" class="section">
             <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center"><i class="fas fa-calendar-alt mr-3 text-orange-600"></i> Task Calendar</h2>
             <div id="calendar" class="bg-white p-6 rounded-lg shadow-lg"></div>
@@ -1127,23 +1329,23 @@
             </div>
             <div id="myTasksListContainer" class="tasks-list-grid">
                 <div id="myTasksListContainer" class="space-y-3">
-                  <!-- Sample Task Item -->
-                  <div class="task-card bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm">
-                  <!-- Task Header -->
-                  <div class="flex items-center justify-between cursor-pointer" onclick="toggleTaskDetails(this)">
-                    <span class="text-base font-medium">Seo bhi karana hai</span>
-                    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full">
-                  </div>
-                
-                  <!-- Task Details (Initially Hidden) -->
-                  <div class="task-details mt-2 pl-2 text-sm text-gray-300 hidden">
-                    <p><strong>Description:</strong> Work on optimizing keywords and meta tags.</p>
-                    <p><strong>Priority:</strong> Medium</p>
-                    <p><strong>Due:</strong> 2025-07-03</p>
-                  </div>
-                </div>
-                
-                </div>
+  <!-- Sample Task Item -->
+  <div class="task-card bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm">
+  <!-- Task Header -->
+  <div class="flex items-center justify-between cursor-pointer" onclick="toggleTaskDetails(this)">
+    <span class="text-base font-medium">Seo bhi karana hai</span>
+    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full">
+  </div>
+
+  <!-- Task Details (Initially Hidden) -->
+  <div class="task-details mt-2 pl-2 text-sm text-gray-300 hidden">
+    <p><strong>Description:</strong> Work on optimizing keywords and meta tags.</p>
+    <p><strong>Priority:</strong> Medium</p>
+    <p><strong>Due:</strong> 2025-07-03</p>
+  </div>
+</div>
+
+</div>
 
                 <!-- Tasks will be rendered here by JS -->
             </div>
@@ -1250,7 +1452,52 @@
         </div>
     </div>
     
-    <!-- Mark as Task Modal -->
+    <!-- ADDITION: Add New Gantt Task Modal -->
+    <div id="addGanttTaskModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeGanttModalBtn">×</span>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Add New Gantt Task</h2>
+            <form id="addGanttTaskForm">
+                <div class="form-group">
+                    <label for="ganttTaskName" class="block text-gray-700 font-medium mb-1">Task Name:</label>
+                    <input type="text" id="ganttTaskName" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="form-group">
+                    <label for="ganttStartDate" class="block text-gray-700 font-medium mb-1">Start Date:</label>
+                    <input type="date" id="ganttStartDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="form-group">
+                    <label for="ganttEndDate" class="block text-gray-700 font-medium mb-1">End Date:</label>
+                    <input type="date" id="ganttEndDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="form-group">
+                    <label for="ganttTaskPriority" class="block text-gray-700 font-medium mb-1">Priority:</label>
+                    <select id="ganttTaskPriority" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                 <div class="form-group">
+                    <label for="ganttAssignedTo" class="block text-gray-700 font-medium mb-1">Assign To:</label>
+                    <select id="ganttAssignedTo" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        <!-- Users will be populated here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ganttTaskProgress" class="block text-gray-700 font-medium mb-1">Progress (%):</label>
+                    <input type="number" id="ganttTaskProgress" min="0" max="100" value="0" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="form-group">
+                    <label for="ganttDependencies" class="block text-gray-700 font-medium mb-1">Dependencies (comma-separated Task IDs):</label>
+                    <input type="text" id="ganttDependencies" placeholder="e.g., task123, task456" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <button type="submit" class="w-full py-3 mt-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-200">Add Task to Chart</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- NEW: Mark as Task Modal -->
     <div id="markAsTaskModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeMarkAsTaskModalBtn">×</span>
@@ -1259,25 +1506,26 @@
                 <div class="form-group">
                     <label for="markAsTaskTitle" class="block text-gray-700 font-medium mb-1">Title:</label>
                     <textarea id="markAsTaskTitle" required rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                </div>
-                <!-- Task Points -->
-                <div class="form-group">
-                  <label for="markAsTaskPoints" class="block text-gray-700 font-medium mb-1">Points:</label>
-                  <select id="markAsTaskPoints" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="30">30</option>
-                    <option value="50">50</option>
-                    <option value="80">80</option>
-                    <option value="100">100</option>
-                  </select>
+                    <!-- NEW: Task Points -->
+<div class="form-group">
+  <label for="markAsTaskPoints" class="block text-gray-700 font-medium mb-1">Points:</label>
+  <select id="markAsTaskPoints" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+    <option value="30">30</option>
+    <option value="50">50</option>
+    <option value="80">80</option>
+    <option value="100">100</option>
+  </select>
+</div>
+
                 </div>
 
-                <!-- Subtask Checkbox -->
+                <!-- NEW: Subtask Checkbox -->
                 <div class="form-group flex items-center">
                     <input type="checkbox" id="markAsTaskIsSubtask" class="mr-2 h-4 w-4 text-indigo-600 border-gray-300 rounded">
                     <label for="markAsTaskIsSubtask" class="text-gray-700 font-medium">Is this a subtask?</label>
                 </div>
 
-                <!-- Priority Options -->
+                <!-- NEW: Priority Options -->
                 <div class="form-group">
                     <label for="markAsTaskPriority" class="block text-gray-700 font-medium mb-1">Priority:</label>
                     <select id="markAsTaskPriority" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
@@ -1294,7 +1542,7 @@
                     </select>
                 </div>
                 
-                <!-- Collaborations -->
+                <!-- NEW: Collaborations -->
                 <div class="form-group">
                     <label for="markAsTaskCollaborators" class="block text-gray-700 font-medium mb-1">Collaborators (select multiple):</label>
                     <select id="markAsTaskCollaborators" multiple class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 h-24">
@@ -1302,9 +1550,9 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="markAsTaskStartDate" class="block text-gray-700 font-medium mb-1">Start Date:</label>
-                    <input type="date" id="markAsTaskStartDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
+    <label for="markAsTaskStartDate" class="block text-gray-700 font-medium mb-1">Start Date:</label>
+    <input type="date" id="markAsTaskStartDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+</div>
 
 
                 <div class="form-group">
@@ -1312,11 +1560,11 @@
                     <input type="date" id="markAsTaskDate" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 <div class="form-group">
-                  <label for="markAsTaskReminder" class="block text-gray-700 font-medium mb-1">
-                    Reminder (e.g., 1 day, 2 hours):
-                  </label>
-                  <input type="text" id="markAsTaskReminder" placeholder="e.g., 1 day, 2 hours" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
+  <label for="markAsTaskReminder" class="block text-gray-700 font-medium mb-1">
+    Reminder (e.g., 1 day, 2 hours):
+  </label>
+  <input type="text" id="markAsTaskReminder" placeholder="e.g., 1 day, 2 hours" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+</div>
 
                 
 
@@ -1325,25 +1573,25 @@
                     <input type="email" id="markAsTaskEmail" placeholder="Enter an email for this task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
 
-                <!-- Upload Image -->
+                <!-- NEW: Upload Image -->
                 <div class="form-group">
                     <label for="markAsTaskImageUpload" class="block text-gray-700 font-medium mb-1">Upload Image:</label>
                     <input type="file" id="markAsTaskImageUpload" accept="image/*" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
 
-                <!-- Add Comments -->
+                <!-- NEW: Add Comments -->
                 <div class="form-group">
                     <label for="markAsTaskComments" class="block text-gray-700 font-medium mb-1">Comments:</label>
                     <textarea id="markAsTaskComments" rows="3" placeholder="Add initial comments for this task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                 </div>
 
-                <!-- Add Link -->
+                <!-- NEW: Add Link -->
                 <div class="form-group">
                     <label for="markAsTaskLink" class="block text-gray-700 font-medium mb-1">Related Link:</label>
                     <input type="url" id="markAsTaskLink" placeholder="e.g., https://example.com/related-doc" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
 
-                <!-- Parent Task ID -->
+                <!-- NEW: Parent Task ID -->
                 <div class="form-group">
                     <label for="markAsTaskParentId" class="block text-gray-700 font-medium mb-1">Parent Task ID (if subtask):</label>
                     <input type="text" id="markAsTaskParentId" placeholder="Enter ID of parent task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
@@ -1353,31 +1601,31 @@
                     <label for="markAsTaskAddTo" class="block text-gray-700 font-medium mb-1">Add to:</label>
                     <select id="markAsTaskAddTo" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="personal">Personal Task List</option>
+                        <option value="gantt">Gantt Chart</option>
                         <option value="note">Sticky Note</option>
-                        <option value="gantt">Gantt Chart</option> <!-- Added Gantt Chart option -->
                     </select>
                 </div>
                 <!-- ⏱️ Timer and Checklist Section -->
-                <hr class="my-4">
+<hr class="my-4">
 
-                <div class="form-group">
-                  <label class="block text-gray-700 font-medium mb-1">Start Timer:</label>
-                  <button type="button" id="startTimerBtn" class="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600">
-                    <i class="fas fa-play mr-2"></i>Start Timer
-                  </button>
-                  <div id="liveTimerDisplay" class="mt-2 text-lg font-bold text-indigo-700">00:00:00</div>
-                </div>
-                
-                <div class="form-group mt-4">
-                  <label for="checklistInput" class="block text-gray-700 font-medium mb-1">Checklist:</label>
-                  <div class="flex gap-2 mb-2">
-                    <input type="text" id="checklistInput" placeholder="Add checklist item" class="flex-grow p-2 border border-gray-300 rounded">
-                    <button type="button" id="addChecklistBtn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">Add</button>
-                  </div>
-                  <ul id="checklistItems" class="list-disc pl-5 text-gray-800 space-y-1">
-                    <!-- checklist items go here -->
-                  </ul>
-                </div>
+<div class="form-group">
+  <label class="block text-gray-700 font-medium mb-1">Start Timer:</label>
+  <button type="button" id="startTimerBtn" class="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600">
+    <i class="fas fa-play mr-2"></i>Start Timer
+  </button>
+  <div id="liveTimerDisplay" class="mt-2 text-lg font-bold text-indigo-700">00:00:00</div>
+</div>
+
+<div class="form-group mt-4">
+  <label for="checklistInput" class="block text-gray-700 font-medium mb-1">Checklist:</label>
+  <div class="flex gap-2 mb-2">
+    <input type="text" id="checklistInput" placeholder="Add checklist item" class="flex-grow p-2 border border-gray-300 rounded">
+    <button type="button" id="addChecklistBtn" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700">Add</button>
+  </div>
+  <ul id="checklistItems" class="list-disc pl-5 text-gray-800 space-y-1">
+    <!-- checklist items go here -->
+  </ul>
+</div>
 
                 <button type="submit" class="w-full py-3 mt-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-200">Create Task</button>
             </form>
@@ -1394,7 +1642,7 @@
         </div>
     </div>
 
-    <!-- Message Context Menu -->
+    <!-- NEW: Message Context Menu -->
     <div id="messageContextMenu">
         <button id="contextMenuMarkAsTaskBtn" class="context-menu-btn">
             <i class="fas fa-check-square"></i> Mark as Task
@@ -1412,6 +1660,8 @@
 
     <!-- FullCalendar JS -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <!-- Frappe Gantt JS -->
+    <script src='https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js'></script>
     <!-- Sparkline chart library -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="firebase-login-toggle.js"></script>
@@ -1577,8 +1827,8 @@
         let unsubscribeUserTasks = null;
         let unsubscribeAllTasks = null;
         let unsubscribeUser = null;
-        let overdueCheckInterval;
-        let calendar;
+        let ganttChart = null; // Reference to the Gantt chart instance
+        let showCriticalPath = false; // State for critical path toggle
 
         // DOM Elements
         const sections = document.querySelectorAll('.section');
@@ -1613,7 +1863,9 @@
         const inboxBadgeDisplayEl = document.getElementById('inboxBadgeDisplay');
         const bellSound = document.getElementById('bellSound');
         let rangBellForTasks = new Set();
-        
+        let overdueCheckInterval;
+        let calendar;
+
         // Dashboard specific elements
         const taskProgressBar = document.getElementById('taskProgressBar');
         const completedCountEl = document.getElementById('completedCount');
@@ -1632,7 +1884,25 @@
         const performanceSparkline = document.getElementById('performanceSparkline');
         const achievementBadges = document.getElementById('achievementBadges');
 
-        // Chat-to-Task Elements
+        // Gantt Chart Elements
+        const ganttChartEl = document.getElementById('ganttChart');
+        const refreshGanttBtn = document.getElementById('refreshGanttBtn');
+        const fitGanttBtn = document.getElementById('fitGanttBtn');
+        const ganttViewBtns = document.querySelectorAll('.gantt-view-btn');
+        const priorityFilter = document.getElementById('priorityFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const assigneeFilter = document.getElementById('assigneeFilter'); // New assignee filter
+        const ganttSearch = document.getElementById('ganttSearch'); // New search input
+        const toggleCriticalPathBtn = document.getElementById('toggleCriticalPathBtn'); // New critical path toggle
+
+        // ADDITION: Gantt Chart Add Task Modal elements
+        const addNewGanttTaskBtn = document.getElementById('addNewGanttTaskBtn');
+        const addGanttTaskModal = document.getElementById('addGanttTaskModal');
+        const closeGanttModalBtn = document.getElementById('closeGanttModalBtn');
+        const addGanttTaskForm = document.getElementById('addGanttTaskForm');
+        const ganttAssignedTo = document.getElementById('ganttAssignedTo'); // Assigned To dropdown in Gantt modal
+        
+        // NEW: Chat-to-Task Elements
         const chatMessagesEl = document.getElementById('chatMessages');
         const chatInputForm = document.getElementById('chatInputForm');
         const chatInput = document.getElementById('chatInput');
@@ -1647,7 +1917,7 @@
         const markAsTaskAssignTo = document.getElementById('markAsTaskAssignTo');
         const markAsTaskEmail = document.getElementById('markAsTaskEmail');
 
-        // Mark as Task Modal new fields
+        // NEW: Mark as Task Modal new fields
         const markAsTaskIsSubtask = document.getElementById('markAsTaskIsSubtask');
         const markAsTaskPriority = document.getElementById('markAsTaskPriority');
         const markAsTaskCollaborators = document.getElementById('markAsTaskCollaborators');
@@ -1655,13 +1925,6 @@
         const markAsTaskComments = document.getElementById('markAsTaskComments');
         const markAsTaskLink = document.getElementById('markAsTaskLink');
         const markAsTaskParentId = document.getElementById('markAsTaskParentId');
-
-        // Timer and Checklist Elements (from the second script block)
-        const startTimerBtn = document.getElementById('startTimerBtn');
-        const liveTimerDisplay = document.getElementById('liveTimerDisplay');
-        const checklistInput = document.getElementById('checklistInput');
-        const addChecklistBtn = document.getElementById('addChecklistBtn');
-        const checklistItems = document.getElementById('checklistItems');
 
 
         // Initialize the application
@@ -1720,7 +1983,50 @@
             inboxBtnTrigger.addEventListener('click', () => inboxModal.style.display = 'block');
             closeInboxModalBtn.addEventListener('click', () => inboxModal.style.display = 'none');
             
-            // Chat-to-Task Event Listeners
+            // Gantt chart controls
+            if (refreshGanttBtn) refreshGanttBtn.addEventListener('click', renderGanttChart);
+            if (fitGanttBtn) fitGanttBtn.addEventListener('click', fitGanttToScreen);
+            if (priorityFilter) priorityFilter.addEventListener('change', renderGanttChart);
+            if (statusFilter) statusFilter.addEventListener('change', renderGanttChart);
+            if (assigneeFilter) assigneeFilter.addEventListener('change', renderGanttChart); // Listen for assignee filter changes
+            if (ganttSearch) ganttSearch.addEventListener('input', renderGanttChart); // Listen for search input changes
+            if (toggleCriticalPathBtn) toggleCriticalPathBtn.addEventListener('click', toggleCriticalPath);
+
+
+            // ADDITION: Gantt Chart "Add Task" Modal Listeners
+            if (addNewGanttTaskBtn) {
+                addNewGanttTaskBtn.addEventListener('click', () => addGanttTaskModal.style.display = 'block');
+            }
+            if(closeGanttModalBtn) {
+                closeGanttModalBtn.addEventListener('click', () => addGanttTaskModal.style.display = 'none');
+            }
+            if (addGanttTaskForm) {
+                addGanttTaskForm.addEventListener('submit', handleAddGanttTask);
+            }
+
+            window.addEventListener('click', (event) => {
+                if (event.target == addGanttTaskModal) {
+                    addGanttTaskModal.style.display = 'none';
+                }
+                // Hide context menu if clicking outside
+                if (!messageContextMenu.contains(event.target)) {
+                    messageContextMenu.style.display = 'none';
+                }
+            });
+            
+            // Gantt view options
+            ganttViewBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    ganttViewBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const viewMode = e.target.dataset.view;
+                    if (ganttChart) {
+                        ganttChart.change_view_mode(viewMode);
+                    }
+                });
+            });
+
+            // NEW: Chat-to-Task Event Listeners
             chatInputForm.addEventListener('submit', handleSendMessage);
 
             // Context Menu Listener
@@ -1738,11 +2044,6 @@
                     markAsTaskModal.style.display = 'none';
                 }
             });
-
-            // Timer and Checklist Event Listeners
-            if (startTimerBtn) startTimerBtn.addEventListener('click', startTimer);
-            if (addChecklistBtn) addChecklistBtn.addEventListener('click', addChecklistItem);
-            if (checklistItems) checklistItems.addEventListener('click', handleChecklistItemClick);
         }
 
         // Load user data from Firestore
@@ -1765,12 +2066,13 @@
             }
         }
         
-        // Populate "Assign To" dropdowns with users from Firestore
+        // NEW: Populate "Assign To" dropdowns with users from Firestore
         async function populateAssignToDropdown() {
             try {
                 const usersSnapshot = await getDocs(collection(db, "users"));
                 const assignToSelects = [
-                    document.getElementById('markAsTaskAssignTo')
+                    document.getElementById('markAsTaskAssignTo'),
+                    document.getElementById('ganttAssignedTo') // Add the new Gantt assignedTo dropdown
                 ];
 
                 assignToSelects.forEach(select => {
@@ -1782,20 +2084,27 @@
                             option.value = doc.id; // User UID
                             option.textContent = user.username || 'Unnamed User';
                             // For task creation forms, default to current user if available
-                            if (currentUser && doc.id === currentUser.uid) {
+                            if (select.id !== 'assigneeFilter' && currentUser && doc.id === currentUser.uid) {
                                 option.selected = true;
                             }
                             select.appendChild(option);
                         });
+                        // Remove "All Assignees" if it's a task creation dropdown
+                        if (select.id !== 'assigneeFilter') {
+                            const allOption = select.querySelector('option[value="all"]');
+                            if (allOption) allOption.remove();
+                        }
                     }
                 });
             } catch (error) {
                 console.error("Error populating users dropdown: ", error);
-                document.getElementById('markAsTaskAssignTo').innerHTML = '<option value="">Could not load users</option>';
+                const defaultOption = '<option value="">Could not load users</option>';
+                document.getElementById('markAsTaskAssignTo').innerHTML = defaultOption;
+                document.getElementById('ganttAssignedTo').innerHTML = defaultOption;
             }
         }
 
-        // Populate "Collaborators" dropdown with users from Firestore
+        // NEW: Populate "Collaborators" dropdown with users from Firestore
         async function populateCollaboratorsDropdown() {
             try {
                 const usersSnapshot = await getDocs(collection(db, "users"));
@@ -1831,7 +2140,7 @@
             }
         }
         
-        // Setup all Firestore listeners
+        // NEW: Setup all Firestore listeners
         function setupListeners(userId) {
             // Clean up old listeners first
             if (unsubscribeUser) unsubscribeUser();
@@ -1856,41 +2165,39 @@
                 updateUserSpecificUI(); // Update UI parts that ONLY show the current user's data
             });
 
-            // 3. All tasks listener (for global views like Calendar and Gantt)
+            // 3. All tasks listener (for global views like Gantt and Calendar)
             const allTasksQuery = query(collection(db, 'forms'));
             unsubscribeAllTasks = onSnapshot(allTasksQuery, (snapshot) => {
-                const userPromises = [];
-                const userCache = new Map();
-
-                snapshot.docs.forEach(doc => {
-                    const task = { id: doc.id, ...doc.data() };
-                    if (task.assignedTo && !userCache.has(task.assignedTo)) {
-                        const userDocRef = getDoc(doc(db, 'users', task.assignedTo)); // Corrected getDoc usage
-                        userPromises.push(userDocRef);
-                        userCache.set(task.assignedTo, userDocRef);
+                allTasks = [];
+                const userNames = {}; // Cache for usernames
+                
+                const promises = snapshot.docs.map(async (taskDoc) => {
+                    const task = { id: taskDoc.id, ...taskDoc.data() };
+                    
+                    // Fetch username if not already cached
+                    if (task.assignedTo && !userNames[task.assignedTo]) {
+                        try {
+                            const userDoc = await getDoc(doc(db, 'users', task.assignedTo));
+                            if (userDoc.exists()) {
+                                userNames[task.assignedTo] = userDoc.data().username || 'Unknown User';
+                            } else {
+                                userNames[task.assignedTo] = 'Unknown User';
+                            }
+                        } catch (e) {
+                             userNames[task.assignedTo] = 'Unknown User';
+                        }
                     }
+                    task.assignedToName = userNames[task.assignedTo];
+                    allTasks.push(task);
                 });
 
-                Promise.all(userPromises).then(userDocs => {
-                    userDocs.forEach(userDoc => {
-                        if (userDoc.exists()) {
-                            userCache.set(userDoc.id, userDoc.data());
-                        }
-                    });
-
-                    allTasks = snapshot.docs.map(doc => {
-                        const task = { id: doc.id, ...doc.data() };
-                        const userData = userCache.get(task.assignedTo);
-                        task.assignedToName = userData ? userData.username : 'Unassigned';
-                        return task;
-                    });
-
-                    updateGlobalUI();
+                Promise.all(promises).then(() => {
+                    updateGlobalUI(); // Update UI parts that show data from ALL users
                 });
             });
         }
         
-        // This function updates UI parts that ONLY show the current user's data
+        // NEW: This function updates UI parts that ONLY show the current user's data
         function updateUserSpecificUI() {
             updatePendingTasksList();
             updateActiveTasksList();
@@ -1907,13 +2214,12 @@
             }
         }
 
-        // This function updates UI parts that show data from ALL users
+        // NEW: This function updates UI parts that show data from ALL users
         function updateGlobalUI() {
             if (calendar) loadTasksIntoCalendar();
-            // If gantt chart section is active, re-render it
-            if (document.getElementById('ganttChartSection').classList.contains('active')) {
-                renderGanttChart();
-            }
+            
+            // Always render Gantt chart with the latest allTasks data
+            renderGanttChart();
         }
 
         // Update UI with user-specific data
@@ -1962,7 +2268,7 @@
             userPerformanceTag.className = `inline-block px-3 py-1 rounded-full text-sm font-medium ${performanceClass}`;
         }
         
-        // Chat-to-Task functions
+        // NEW: Chat-to-Task functions
         function renderInitialChatMessages() {
             const initialMessages = [
                 { sender: 'Sarah Chen', text: 'We need to design the homepage by Monday.', time: '10:09 AM', avatar: 'https://placehold.co/40x40/f87171/ffffff?text=SC' },
@@ -2039,25 +2345,24 @@
             const priority = markAsTaskPriority.value;
             const assignedTo = markAsTaskAssignTo.value;
             const collaborators = Array.from(markAsTaskCollaborators.selectedOptions).map(option => option.value);
-            const startDate = document.getElementById('markAsTaskStartDate').value;
-            const dueDate = document.getElementById('markAsTaskDate').value;
+            const dueDate = markAsTaskDate.value;
             const taskEmail = markAsTaskEmail.value;
             const imageFile = markAsTaskImageUpload.files[0]; // Get the selected image file
             const comments = markAsTaskComments.value;
             const relatedLink = markAsTaskLink.value;
             const parentTaskId = markAsTaskParentId.value.trim();
             const addTo = document.getElementById('markAsTaskAddTo').value;
-            const taskPoints = parseInt(document.getElementById('markAsTaskPoints').value) || 0; // Get task points
 
-            if (!currentUser || !title || !startDate || !dueDate || !assignedTo) {
-                showCustomAlert("Error", "Please fill out all required fields, including start and due dates.");
+
+            if (!currentUser || !title || !dueDate || !assignedTo) {
+                showCustomAlert("Error", "Please fill out all required fields.");
                 return;
             }
 
             // Simple validation for dates (dueDate >= today)
             const today = new Date().toISOString().split('T')[0];
-            if (dueDate < today || startDate > dueDate) {
-                showCustomAlert("Error", "Due date cannot be in the past, and start date cannot be after the due date.");
+            if (dueDate < today) {
+                showCustomAlert("Error", "Due date cannot be in the past.");
                 return;
             }
 
@@ -2066,42 +2371,47 @@
             // Placeholder for image URL (actual upload to Firebase Storage would be needed)
             let imageUrl = '';
             if (imageFile) {
+                // In a real application, you would upload this file to Firebase Storage
+                // and get a downloadable URL. For this example, we'll just store the filename.
                 console.log("Image file selected:", imageFile.name);
                 imageUrl = `gs://your-firebase-storage-bucket/${imageFile.name}`; // Placeholder URL
                 showCustomAlert("Image Upload", "Image upload functionality requires Firebase Storage setup. Storing filename as placeholder.");
             }
 
             try {
+                // Determine the start date for Gantt tasks. If not specified, default to today.
+                const ganttStartDate = (addTo === 'gantt') ? new Date().toISOString().split('T')[0] : null;
+
                 const taskData = {
                     title: title,
                     description: 'Created from chat message.',
-                    isSubtask: isSubtask,
-                    priority: priority,
+                    isSubtask: isSubtask, // NEW FIELD
+                    priority: priority, // NEW FIELD
                     taskType: 'General', // Default type
-                    startDate: startDate, // NEW: Saving start date
-                    dueDate: `${dueDate}T23:59`,
+                    dueDate: `${dueDate}T23:59`, // Set time to end of day
+                    ganttStartDate: ganttStartDate, // For Gantt chart
                     status: 'pending',
-                    progress: 0,
-                    points: taskPoints, // Use points from modal
-                    comments: comments ? [{ text: comments, by: createdByUsername, createdAt: serverTimestamp() }] : [],
-                    notes: [],
+                    progress: 0, // Default progress for new tasks
+                    points: 0,
+                    comments: comments ? [{ text: comments, by: createdByUsername, createdAt: serverTimestamp() }] : [], // NEW FIELD (array of objects)
+                    notes: [], // Initialize notes array
                     createdBy: createdByUsername,
                     assignedTo: assignedTo,
-                    collaborators: collaborators,
-                    taskSpecificEmail: taskEmail,
-                    imageUrl: imageUrl,
-                    relatedLink: relatedLink,
-                    parentTaskId: parentTaskId,
+                    collaborators: collaborators, // NEW FIELD (array of UIDs)
+                    taskSpecificEmail: taskEmail, // NEW FIELD
+                    imageUrl: imageUrl, // NEW FIELD
+                    relatedLink: relatedLink, // NEW FIELD
+                    parentTaskId: parentTaskId, // NEW FIELD
                     createdAt: serverTimestamp(),
                     isLocked: false,
-                    lockUntil: null
+                    lockUntil: null,
+                    dependencies: '' // Initialize dependencies as empty string
                 };
 
                 // If 'Sticky Note' is selected, add the title as the first note.
                 if (addTo === 'note') {
                     taskData.notes.push(title);
                 }
-                // No special handling needed for 'gantt' as it's already a task with dates
 
                 await addDoc(collection(db, "forms"), taskData);
 
@@ -2109,8 +2419,12 @@
                 markAsTaskModal.style.display = 'none';
                 showCustomAlert("Success", "Task created successfully!");
                 
-                // Navigate to My Tasks section
-                showSection('myTasksOverviewSection');
+                // NEW: Navigate to the relevant section
+                if (addTo === 'gantt') {
+                    showSection('ganttSection');
+                } else {
+                    showSection('myTasksOverviewSection');
+                }
 
             } catch (error) {
                 console.error("Error creating task from chat: ", error);
@@ -2136,11 +2450,13 @@
                 return;
             }
 
+            // Date validation: ensure taskDate is not in the past
             const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            now.setHours(0, 0, 0, 0); // Normalize to start of today
             const selectedDate = new Date(taskDate);
+            selectedDate.setHours(0, 0, 0, 0); // Normalize selected date
 
-            if (selectedDate < today) {
+            if (selectedDate < now) {
                 showCustomAlert("Validation Error", "Due Date cannot be in the past.");
                 return;
             }
@@ -2154,23 +2470,24 @@
                     description: taskDescription,
                     priority: taskPriority,
                     taskType: taskType,
-                    startDate: new Date().toISOString().split('T')[0], // Set start date to today
                     dueDate: `${taskDate}T${taskTime}`,
+                    ganttStartDate: taskDate, // Use taskDate as ganttStartDate by default
                     status: 'pending',
-                    progress: 0,
+                    progress: 0, // Default progress for new tasks
                     points: taskPoints,
                     comments: [],
-                    notes: [],
+                    notes: [], // Initialize notes as an empty array
                     createdBy: createdByUsername,
                     assignedTo: assignedToUserId,
-                    isSubtask: false,
-                    collaborators: [],
-                    imageUrl: '',
-                    relatedLink: '',
-                    parentTaskId: '',
+                    isSubtask: false, // Default for main task form
+                    collaborators: [], // Default for main task form
+                    imageUrl: '', // Default for main task form
+                    relatedLink: '', // Default for main task form
+                    parentTaskId: '', // Default for main task form
                     createdAt: serverTimestamp(),
                     isLocked: false,
-                    lockUntil: null
+                    lockUntil: null,
+                    dependencies: '' // Initialize dependencies as empty string
                 });
 
                 addTaskForm.reset();
@@ -2180,6 +2497,103 @@
             } catch (error) {
                 console.error("Error adding task: ", error);
                 showCustomAlert("Error", "Failed to add task: " + error.message);
+            }
+        }
+
+        // ADDITION: Handle adding a new task from the Gantt Chart modal
+        async function handleAddGanttTask(e) {
+            e.preventDefault();
+
+            const taskName = document.getElementById('ganttTaskName').value;
+            const startDate = document.getElementById('ganttStartDate').value;
+            const endDate = document.getElementById('ganttEndDate').value;
+            const priority = document.getElementById('ganttTaskPriority').value;
+            const assignedTo = document.getElementById('ganttAssignedTo').value;
+            const progress = parseInt(document.getElementById('ganttTaskProgress').value) || 0;
+            const dependencies = document.getElementById('ganttDependencies').value.trim();
+
+            if (!currentUser) {
+                showCustomAlert("Error", "You must be logged in to add a task.");
+                return;
+            }
+            
+            // Validate dates: end date must be greater than or equal to start date
+            if (new Date(startDate) > new Date(endDate)) {
+                 showCustomAlert("Validation Error", "Start date cannot be after the end date.");
+                 return;
+            }
+
+            const createdByUsername = localStorage.getItem("username") || "User";
+
+            try {
+                await addDoc(collection(db, "forms"), {
+                    title: taskName,
+                    description: 'Added from Gantt Chart', // Default description
+                    priority: priority,
+                    taskType: 'General', // Default type
+                    // For consistency, dueDate aligns with endDate for Gantt view
+                    dueDate: `${endDate}T23:59`, // Set time to end of day
+                    ganttStartDate: startDate, // Specific start date for Gantt chart rendering
+                    status: 'pending', // New tasks are pending by default
+                    progress: progress,
+                    points: 0, // Default points
+                    comments: [],
+                    notes: [],
+                    createdBy: createdByUsername,
+                    assignedTo: assignedTo, // The selected assignee
+                    isSubtask: false, // Default for Gantt task form
+                    collaborators: [], // Default for Gantt task form
+                    imageUrl: '', // Default for Gantt task form
+                    relatedLink: '', // Default for Gantt task form
+                    parentTaskId: '', // Default for Gantt task form
+                    createdAt: serverTimestamp(),
+                    isLocked: false,
+                    lockUntil: null,
+                    dependencies: dependencies // Save dependencies
+                });
+
+                addGanttTaskForm.reset();
+                addGanttTaskModal.style.display = 'none';
+                showCustomAlert("Success", "Task added! The chart will refresh automatically.");
+                // The onSnapshot listener will handle the re-rendering.
+
+            } catch (error) {
+                console.error("Error adding Gantt task: ", error);
+                showCustomAlert("Error", "Failed to add task: " + error.message);
+            }
+        }
+
+
+        // MODIFICATION: New function to handle deleting a note from Firestore
+        async function handleDeleteNote(taskId, noteIndex) {
+            if (!currentUser) {
+                showCustomAlert("Error", "You must be logged in to delete notes.");
+                return;
+            }
+
+            const taskRef = doc(db, 'forms', taskId);
+            try {
+                const taskDoc = await getDoc(taskRef);
+                if (taskDoc.exists()) {
+                    const taskData = taskDoc.data();
+                    // Create a mutable copy of the notes array
+                    const notes = [...(taskData.notes || [])];
+
+                    // Check if the index is valid
+                    if (noteIndex >= 0 && noteIndex < notes.length) {
+                        // Remove the note at the specified index
+                        notes.splice(noteIndex, 1); 
+                        // Update the document with the new notes array
+                        await updateDoc(taskRef, { notes: notes });
+                        showCustomAlert("Success", "Note deleted successfully!");
+                        // The real-time listener (onSnapshot) will automatically re-render the UI
+                    } else {
+                        showCustomAlert("Error", "Note not found or index is out of bounds.");
+                    }
+                }
+            } catch (error) {
+                console.error("Error deleting note: ", error);
+                showCustomAlert("Error", "Failed to delete note: " + error.message);
             }
         }
 
@@ -2621,90 +3035,269 @@
             }
         }
 
-        // --- GANTT CHART FUNCTIONALITY ---
-        function renderGanttChart() {
-            const ganttSection = document.getElementById('ganttChartSection');
-            // Ensure the container is ready
-            ganttSection.innerHTML = `
-                <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
-                    <i class="fas fa-project-diagram mr-3 text-blue-600"></i> Project Gantt Chart
-                </h2>
-                <div class="gantt-container bg-white p-6 rounded-lg shadow-lg">
-                    <div class="gantt"></div>
-                </div>
-            `;
-            const ganttContainer = ganttSection.querySelector(".gantt");
-
-            if (!allTasks || allTasks.length === 0) {
-                ganttContainer.innerHTML = '<p class="text-center text-gray-500">No tasks available to display in the Gantt chart.</p>';
-                return;
-            }
-
-            const tasksByAssignee = allTasks.reduce((acc, task) => {
-                const assignee = task.assignedToName || 'Unassigned';
-                if (!acc[assignee]) {
-                    acc[assignee] = [];
-                }
-                acc[assignee].push(task);
-                return acc;
-            }, {});
-
-            const ganttData = Object.keys(tasksByAssignee).map(assignee => {
-                return {
-                    name: assignee,
-                    desc: `Tasks for ${assignee}`,
-                    values: tasksByAssignee[assignee]
-                        .filter(task => task.startDate && task.dueDate) // Ensure tasks have dates
-                        .map(task => {
-                            const fromDate = new Date(task.startDate);
-                            const toDate = new Date(task.dueDate);
-                            const now = new Date();
-
-                            let customClass = 'ganttBlue'; // Default for Low priority
-                            if (task.priority === 'High') customClass = 'ganttRed';
-                            if (task.priority === 'Medium') customClass = 'ganttOrange';
-                            
-                            if (task.status === 'completed') {
-                                customClass = 'ganttGreen';
-                            } else if (toDate < now) {
-                                customClass = 'ganttRed'; // Overdue tasks are red
-                            }
-
-                            return {
-                                from: `/Date(${fromDate.getTime()})/`,
-                                to: `/Date(${toDate.getTime()})/`,
-                                label: task.title,
-                                customClass: customClass,
-                                dataObj: task // Store original task data for click events
-                            };
-                        })
-                };
-            }).filter(series => series.values.length > 0); // Only include assignees with valid tasks
-
-            if (ganttData.length > 0) {
-                $(ganttContainer).gantt({
-                    source: ganttData,
-                    navigate: 'scroll',
-                    scale: 'weeks',
-                    maxScale: 'months',
-                    minScale: 'days',
-                    itemsPerPage: 20,
-                    onItemClick: function(data) {
-                        const task = data.dataObj;
-                        showCustomAlert(`Task: ${task.title}`, `Status: ${task.status} | Priority: ${task.priority}\nAssigned to: ${task.assignedToName}`);
-                    },
-                    onAddClick: function(dt, rowId) {
-                        showSection('taskNameSection');
-                    },
-                    onRender: function() {
-                        console.log("Gantt chart has been rendered.");
-                    }
-                });
+        // Toggle critical path highlighting
+        function toggleCriticalPath() {
+            showCriticalPath = !showCriticalPath;
+            if (ganttChart) {
+                ganttChart.refresh(showCriticalPath); // Frappe Gantt's refresh can take a boolean to toggle critical path
+                showCustomAlert("Critical Path", `Critical Path highlighting is now ${showCriticalPath ? 'ON' : 'OFF'}.`);
             } else {
-                ganttContainer.innerHTML = '<p class="text-center text-gray-500">No tasks with valid start and end dates to display.</p>';
+                showCustomAlert("Gantt Chart Not Ready", "Gantt chart not initialized yet. Please add some tasks.");
             }
         }
 
+        // Initialize Gantt Chart
+        function renderGanttChart() {
+            if (!ganttChartEl) return;
+            
+            // Destroy existing chart to re-render
+            if (ganttChart && ganttChartEl.firstElementChild) {
+                ganttChartEl.innerHTML = ''; // Clear SVG to re-initiate
+                ganttChart = null; // Dereference the old chart instance
+            }
+            
+            // Filter tasks based on selected filters and search query
+            const priorityFilterValue = priorityFilter.value;
+            const statusFilterValue = statusFilter.value;
+            const assigneeFilterValue = assigneeFilter.value;
+            const searchTerm = ganttSearch.value.toLowerCase();
+            
+            const now = new Date(); // Current time for overdue check
+
+            const filteredTasks = allTasks.filter(task => {
+                // Priority filter
+                if (priorityFilterValue !== 'all' && task.priority !== priorityFilterValue) return false;
+                
+                // Status filter
+                if (statusFilterValue !== 'all') {
+                    if (statusFilterValue === 'overdue') {
+                        const dueDate = new Date(task.dueDate);
+                        if (!((task.status === 'pending' || task.status === 'active') && dueDate < now)) {
+                            return false;
+                        }
+                    } else if (task.status !== statusFilterValue) {
+                        return false;
+                    }
+                }
+                
+                // Assignee filter
+                if (assigneeFilterValue !== 'all' && task.assignedTo !== assigneeFilterValue) return false;
+
+                // Search filter
+                if (searchTerm && !task.title.toLowerCase().includes(searchTerm) && 
+                    !(task.description && task.description.toLowerCase().includes(searchTerm)) &&
+                    !(task.assignedToName && task.assignedToName.toLowerCase().includes(searchTerm))) {
+                    return false;
+                }
+
+                return true;
+            });
+            
+            // Convert tasks to Gantt format
+            const ganttTasks = filteredTasks.map(task => {
+                // Use ganttStartDate if available, otherwise default to createdAt or current date
+                const startDate = task.ganttStartDate ? new Date(task.ganttStartDate) : new Date(task.createdAt?.toDate() || new Date());
+                const dueDate = new Date(task.dueDate);
+                
+                // Determine custom class based on status and overdue
+                let customClass = '';
+                let isOverdue = false;
+                if (task.status === 'completed') {
+                    customClass = 'gantt-completed';
+                } else {
+                    if (dueDate < now && (task.status === 'pending' || task.status === 'active')) {
+                        customClass = 'gantt-overdue';
+                        isOverdue = true;
+                    } else if (task.status === 'pending') {
+                         customClass = 'gantt-pending';
+                    } else if (task.status === 'active') {
+                        customClass = 'gantt-active';
+                    }
+                }
+
+                // Parse dependencies string into an array of IDs
+                const dependenciesArray = task.dependencies ? task.dependencies.split(',').map(d => d.trim()).filter(d => d) : [];
+                
+                // Example: Hardcoding a dependency for demonstration if you want to see critical path
+                // In a real app, this would come from your task data structure
+                if (task.title.includes("Design Homepage")) {
+                    dependenciesArray.push("task-develop-frontend"); // Assuming "task-develop-frontend" is another task's ID
+                }
+
+                return {
+                    id: task.id,
+                    name: task.title,
+                    start: startDate,
+                    end: dueDate,
+                    progress: task.progress || 0, // Use task.progress field
+                    dependencies: dependenciesArray.join(', '), // Frappe Gantt expects comma-separated string
+                    priority: task.priority || 'Medium',
+                    status: isOverdue && task.status !== 'completed' ? 'overdue' : task.status,
+                    notes: task.notes || [],
+                    custom_class: customClass,
+                    assigned_to: task.assignedToName || 'Unknown User' // Display assigned user name
+                };
+            });
+            
+            // Initialize Gantt chart
+            if (ganttTasks.length > 0) {
+                // Ensure the default view mode is 'Day' as per the prompt's active button
+                const currentViewModeBtn = document.querySelector('.gantt-view-btn.active');
+                const initialViewMode = currentViewModeBtn ? currentViewModeBtn.dataset.view : "Day";
+
+                ganttChart = new Gantt("#ganttChart", ganttTasks, {
+                    view_mode: initialViewMode,
+                    date_format: "YYYY-MM-DD",
+                    // Enable critical path highlighting based on toggle state
+                    highlight_critical_path: showCriticalPath, 
+                    custom_popup_html: function(task) {
+                        const startDate = task.start.toLocaleDateString('en-CA'); 
+                        const endDate = task.end.toLocaleDateString('en-CA'); 
+                        const progress = task.progress || 0;
+                        
+                        const notesHtml = task.notes && task.notes.length > 0
+                            ? `<ul>${task.notes.map((note, index) => `
+                                <li>
+                                    <span>${note}</span>
+                                    <button class="delete-note-btn gantt-delete-btn" data-task-id="${task.id}" data-note-index="${index}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </li>`).join('')}</ul>`
+                            : `<p class="text-sm text-gray-500">No notes for this task yet.</p>`;
+
+                        return `
+                            <div class="gantt-popup p-4 bg-white rounded-lg shadow-xl" style="width: 320px;">
+                                <div class="mb-3">
+                                    <h5 class="font-bold text-lg text-gray-800">${task.name}</h5>
+                                    <p class="text-xs text-gray-500">Task Details Overview</p>
+                                </div>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
+                                    <div class="font-semibold text-gray-600">Assigned To:</div>
+                                    <div class="text-gray-800">${task.assigned_to}</div>
+
+                                    <div class="font-semibold text-gray-600">Start Date:</div>
+                                    <div class="text-gray-800">🗓 ${startDate}</div>
+
+                                    <div class="font-semibold text-gray-600">End Date:</div>
+                                    <div class="text-gray-800">🗓 ${endDate}</div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                    <div class="font-semibold text-gray-600">Status:</div>
+                                    <div><span class="status-tag status-${task.status}">${task.status}</span></div>
+
+                                    <div class="font-semibold text-gray-600">Priority:</div>
+                                    <div><span class="priority-tag priority-${task.priority.toLowerCase()}">${task.priority}</span></div>
+
+                                    <div class="font-semibold text-gray-600">Progress:</div>
+                                    <div class="text-gray-800">${progress}% done</div>
+                                </div>
+                                <div class="gantt-popup-notes">
+                                    <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
+                                    ${notesHtml}
+                                    <div class="gantt-popup-add-note">
+                                        <input type="text" placeholder="Add a new note..." id="ganttNewNoteInput-${task.id}" class="flex-grow p-1 border rounded">
+                                        <button data-task-id="${task.id}" id="addGanttNoteBtn-${task.id}" class="bg-indigo-500 text-white px-3 py-1 rounded">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    },
+                    // Callback when task progress is changed by dragging
+                    on_progress_change: async (task, progress) => {
+                        console.log(`Task ${task.id} progress changed to ${progress}`);
+                        try {
+                            const taskRef = doc(db, 'forms', task.id);
+                            await updateDoc(taskRef, { progress: progress });
+                            showCustomAlert("Success", `Progress for "${task.name}" updated to ${progress}%.`);
+                        } catch (error) {
+                            console.error("Error updating task progress:", error);
+                            showCustomAlert("Error", "Failed to update task progress.");
+                        }
+                    },
+                    // Callback when task dates are changed by dragging
+                    on_date_change: async (task, start, end) => {
+                        console.log(`Task ${task.id} dates changed from ${start.toISOString().split('T')[0]} to ${end.toISOString().split('T')[0]}`);
+                        try {
+                            const taskRef = doc(db, 'forms', task.id);
+                            // Ensure the end date includes a time component to avoid conflicts with dueDate
+                            // Frappe Gantt's end date is inclusive, so we'll set dueDate to end of day.
+                            await updateDoc(taskRef, { 
+                                ganttStartDate: start.toISOString().split('T')[0],
+                                dueDate: `${end.toISOString().split('T')[0]}T23:59` // Set to end of day
+                            });
+                            showCustomAlert("Success", `Dates for "${task.name}" updated.`);
+                        } catch (error) {
+                            console.error("Error updating task dates:", error);
+                            showCustomAlert("Error", "Failed to update task dates.");
+                        }
+                    },
+                    // Callback for general changes (like inline editing of task name)
+                    on_change: async (task, arg2, arg3) => {
+                         console.log(`Task ${task.id} changed:`, task.name, arg2, arg3);
+                        try {
+                            const taskRef = doc(db, 'forms', task.id);
+                            // Update the task name in Firestore
+                            await updateDoc(taskRef, { title: task.name });
+                             showCustomAlert("Success", `Task name updated to "${task.name}".`);
+                        } catch (error) {
+                            console.error("Error updating task name:", error);
+                            showCustomAlert("Error", "Failed to update task name.");
+                        }
+                    },
+                    on_popup_open: (task) => {
+                        // Event listeners for delete note buttons within the popup
+                        document.querySelectorAll('.gantt-delete-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                const button = e.currentTarget;
+                                const taskId = button.dataset.taskId;
+                                const noteIndex = parseInt(button.dataset.noteIndex, 10);
+                                handleDeleteNote(taskId, noteIndex);
+                                // Optimistically hide the note element
+                                button.closest('li').style.display = 'none'; 
+                            });
+                        });
+                        
+                        // Event listener for adding a new note from the popup
+                        const addNoteBtn = document.getElementById(`addGanttNoteBtn-${task.id}`);
+                        if (addNoteBtn) {
+                            addNoteBtn.addEventListener('click', async () => {
+                                const newNoteInput = document.getElementById(`ganttNewNoteInput-${task.id}`);
+                                const newNoteText = newNoteInput.value.trim();
+                                if (newNoteText && currentUser) {
+                                    try {
+                                        await updateDoc(doc(db, 'forms', task.id), {
+                                            notes: arrayUnion(newNoteText)
+                                        });
+                                        newNoteInput.value = '';
+                                        showCustomAlert("Note Added", "Note successfully added to task!");
+                                    } catch (error) {
+                                        console.error("Error adding note:", error);
+                                        showCustomAlert("Error", "Failed to add note: " + error.message);
+                                    }
+                                } else if (!currentUser) {
+                                    showCustomAlert("Error", "You must be logged in to add notes.");
+                                }
+                            });
+                        }
+                    }
+                });
+                // Ensure the critical path is rendered initially based on `showCriticalPath` state
+                ganttChart.refresh(showCriticalPath);
+
+            } else {
+                ganttChartEl.innerHTML = '<div class="empty-dashboard-message"><i class="fas fa-tasks"></i><p>No tasks to display. Try changing filters or adding a new task!</p></div>';
+                ganttChart = null;
+            }
+        }
+        
+        // Fit Gantt chart to screen
+        function fitGanttToScreen() {
+            if (ganttChart) {
+                ganttChart.refresh();
+            } else {
+                showCustomAlert("Gantt Chart Not Ready", "No Gantt chart to fit. Please add some tasks first.");
+            }
+        }
 
         // Show a specific section
         function showSection(sectionId) {
@@ -2730,9 +3323,8 @@
             if (sectionId === 'calendarSection' && calendar) {
                 calendar.render();
             }
-
-            // --- GANTT CHART TRIGGER ---
-            if (sectionId === 'ganttChartSection') {
+            
+            if (sectionId === 'ganttSection') {
                 renderGanttChart();
             }
             
@@ -2883,52 +3475,53 @@
                         ? `<p class="flex items-center"><i class="fas fa-envelope mr-2 text-indigo-500"></i> Task Email: <span class="font-medium text-gray-700">${task.taskSpecificEmail}</span></p>`
                         : '';
                      taskCard.innerHTML = `
-                      <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
-                        <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
-                        <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
-                      </div>
-                    
-                      <div class="task-details mt-2 pl-2 text-sm text-gray-700 hidden">
-                        <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
-                            <div class="flex items-center">
-                                <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
-                                ${flagIcon}
-                            </div>
-                        </div>
-                        ${lockIcon}
-                        <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
-                        <div class="text-sm text-gray-500 space-y-1 mb-4">
-                            <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
-                            <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
-                            <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
-                            <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
-                            ${emailHtml}
-                            <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
-                            <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
-                            <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
-                            ${subtaskHtml}
-                            ${parentTaskHtml}
-                            ${collaboratorsHtml}
-                            ${imageUrlHtml}
-                            ${relatedLinkHtml}
-                    
-                            <div class="gantt-popup-notes">
-                                <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
-                                ${notesHtml}
-                                <div class="gantt-popup-add-note mt-2">
-                                    <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
-                                    <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
-                                </div>
-                            </div>
-                            ${commentsHtml}
-                        </div>
-                        <div class="task-actions flex flex-wrap gap-2 mt-4">
-                            ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
-                            ${completeButtonHTML}
-                            ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
-                        </div>
-                      </div>
-                    `;
+  <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
+    <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
+    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
+  </div>
+
+  <div class="task-details mt-2 pl-2 text-sm text-gray-700 hidden">
+    <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
+        <div class="flex items-center">
+            <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
+            ${flagIcon}
+        </div>
+    </div>
+    ${lockIcon}
+    <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
+    <div class="text-sm text-gray-500 space-y-1 mb-4">
+        <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
+        <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
+        <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
+        <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
+        ${emailHtml}
+        <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
+        <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
+        <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
+        ${subtaskHtml}
+        ${parentTaskHtml}
+        ${collaboratorsHtml}
+        ${imageUrlHtml}
+        ${relatedLinkHtml}
+
+        <div class="gantt-popup-notes">
+            <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
+            ${notesHtml}
+            <div class="gantt-popup-add-note mt-2">
+                <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
+                <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
+            </div>
+        </div>
+        ${commentsHtml}
+    </div>
+    <div class="task-actions flex flex-wrap gap-2 mt-4">
+        ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
+        ${completeButtonHTML}
+        ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
+    </div>
+  </div>
+`;
+
                     
                     myTasksListContainerEl.appendChild(taskCard);
                     
@@ -3108,99 +3701,191 @@
 
         // Update date every minute
         setInterval(updateCurrentDate, 60000);
-
-        // Timer and Checklist Functions (from the second script block)
-        let timerIntervalInstance; // Renamed to avoid conflict
-        let secondsElapsed = 0;
-
-        function isWorkingHour() {
-            const now = new Date();
-            const hour = now.getHours();
-
-            if (hour === 13) {
-                return 'lunch';
-            }
-
-            if ((hour >= 9 && hour < 13) || (hour >= 14 && hour < 18)) {
-                return true;
-            }
-
-            return false;
-        }
-
-        function updateTimerDisplay() {
-            const hrs = String(Math.floor(secondsElapsed / 3600)).padStart(2, '0');
-            const mins = String(Math.floor((secondsElapsed % 3600) / 60)).padStart(2, '0');
-            const secs = String(secondsElapsed % 60).padStart(2, '0');
-            if (liveTimerDisplay) liveTimerDisplay.textContent = `${hrs}:${mins}:${secs}`;
-        }
-
-        function startTimer() {
-            if (timerIntervalInstance) {
-                clearInterval(timerIntervalInstance);
-            }
-
-            const status = isWorkingHour();
-
-            if (status === 'lunch') {
-                if (liveTimerDisplay) liveTimerDisplay.textContent = 'Lunch Break 🍱';
-                return;
-            }
-
-            if (status === false) {
-                if (liveTimerDisplay) liveTimerDisplay.textContent = 'Outside working hours 🚫';
-                return;
-            }
-
-            secondsElapsed = 0; // Reset timer for new start
-            updateTimerDisplay();
-
-            timerIntervalInstance = setInterval(() => {
-                const checkNow = isWorkingHour();
-
-                if (checkNow === 'lunch') {
-                    if (liveTimerDisplay) liveTimerDisplay.textContent = 'Lunch Break 🍱';
-                    clearInterval(timerIntervalInstance);
-                    return;
-                }
-
-                if (checkNow === false) {
-                    if (liveTimerDisplay) liveTimerDisplay.textContent = 'Outside working hours 🚫';
-                    clearInterval(timerIntervalInstance);
-                    return;
-                }
-
-                secondsElapsed++;
-                updateTimerDisplay();
-            }, 1000);
-        }
-
-        function addChecklistItem() {
-            const value = checklistInput.value.trim();
-            if (value) {
-                const li = document.createElement("li");
-                li.innerHTML = `<input type="checkbox" class="mr-2">${value} <button class="ml-2 text-red-600 text-sm remove-item">×</button>`;
-                if (checklistItems) checklistItems.appendChild(li);
-                checklistInput.value = '';
-            }
-        }
-
-        function handleChecklistItemClick(e) {
-            if (e.target.classList.contains("remove-item")) {
-                e.target.closest("li").remove();
-            }
-        }
     </script>
     <script>
-    // This script block was merged into the main module script above.
-    // Keeping it here as a placeholder to indicate it was handled.
-    // The functions are now part of the main <script type="module"> block.
-    </script>
+let timerInterval;
+let secondsElapsed = 0;
 
-    <script>
-    // This script block was merged into the main module script above.
-    // Keeping it here as a placeholder to indicate it was handled.
-    // The functions are now part of the main <script type="module"> block.
-    </script>
+document.getElementById("startTimerBtn")?.addEventListener("click", () => {
+  clearInterval(timerInterval);
+  secondsElapsed = 0;
+  updateTimerDisplay();
+
+  timerInterval = setInterval(() => {
+    secondsElapsed++;
+    updateTimerDisplay();
+  }, 1000);
+});
+
+function updateTimerDisplay() {
+  const hrs = String(Math.floor(secondsElapsed / 3600)).padStart(2, '0');
+  const mins = String(Math.floor((secondsElapsed % 3600) / 60)).padStart(2, '0');
+  const secs = String(secondsElapsed % 60).padStart(2, '0');
+  document.getElementById("liveTimerDisplay").textContent = `${hrs}:${mins}:${secs}`;
+}
+
+document.getElementById("addChecklistBtn")?.addEventListener("click", () => {
+  const input = document.getElementById("checklistInput");
+  const value = input.value.trim();
+  if (value) {
+    const li = document.createElement("li");
+    li.innerHTML = `<input type="checkbox" class="mr-2">${value} <button class="ml-2 text-red-600 text-sm remove-item">×</button>`;
+    document.getElementById("checklistItems").appendChild(li);
+    input.value = '';
+  }
+});
+
+document.getElementById("checklistItems")?.addEventListener("click", (e) => {
+  if (e.target.classList.contains("remove-item")) {
+    e.target.closest("li").remove();
+  }
+});
+</script>
+<script>
+let timerInterval = null;  // ✅ declared only once
+let startTime = null;
+let totalSeconds = 0;
+
+// ✅ Check if the current time is within allowed working hours
+function isWorkingHour() {
+    const now = new Date();
+    const hour = now.getHours();
+
+    if (hour === 13) {
+        return 'lunch';
+    }
+
+    if ((hour >= 9 && hour < 13) || (hour >= 14 && hour < 18)) {
+        return true;
+    }
+
+    return false;
+}
+
+// ✅ Update the timer display in HH:MM:SS format
+function updateTimerDisplay() {
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    document.getElementById('liveTimerDisplay').textContent = `${hours}:${minutes}:${seconds}`;
+}
+
+// ✅ Timer Start Button Handler
+document.getElementById('startTimerBtn').addEventListener('click', function () {
+    // Stop any previous timer
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+
+    const status = isWorkingHour();
+
+    if (status === 'lunch') {
+        document.getElementById('liveTimerDisplay').textContent = 'Lunch Break 🍱';
+        return;
+    }
+
+    if (status === false) {
+        document.getElementById('liveTimerDisplay').textContent = 'Outside working hours 🚫';
+        return;
+    }
+
+    // Start tracking time
+    timerInterval = setInterval(() => {
+        const checkNow = isWorkingHour();
+
+        if (checkNow === 'lunch') {
+            document.getElementById('liveTimerDisplay').textContent = 'Lunch Break 🍱';
+            return;
+        }
+
+        if (checkNow === false) {
+            document.getElementById('liveTimerDisplay').textContent = 'Outside working hours 🚫';
+            clearInterval(timerInterval);
+            return;
+        }
+
+        totalSeconds++;
+        updateTimerDisplay();
+    }, 1000);
+});
+</script>
+<script>
+  // Dummy task data for now – replace with real data later
+  const tasks = [
+    { title: "chat", priority: "Medium", status: "Completed" },
+    { title: "sunil", priority: "Medium", status: "Completed" },
+    { title: "add image and text", priority: "Medium", status: "Completed" },
+  ];
+
+  const container = document.getElementById("myTasksListContainer");
+  container.innerHTML = ""; // Clear old task cards
+
+  tasks.forEach(task => {
+    const taskItem = document.createElement("div");
+    taskItem.className = "flex items-center justify-between bg-gray-800 text-white rounded-lg px-4 py-3 shadow-sm";
+
+    taskItem.innerHTML = `
+      <div class="flex items-center gap-3">
+        <input type="checkbox" class="h-5 w-5 accent-indigo-500 rounded-full">
+        <span class="text-base font-medium">${task.title}</span>
+      </div>
+      <button>
+        <i class="far fa-star text-gray-400 hover:text-yellow-400"></i>
+      </button>
+    `;
+
+    container.appendChild(taskItem);
+  });
+  function toggleTaskDetails(headerElement) {
+  const details = headerElement.nextElementSibling;
+  if (details) {
+    details.classList.toggle('hidden');
+  }
+}
+
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Create a Gantt chart inside the ganttChart div
+  const g = new JSGantt.GanttChart(document.getElementById('ganttChart'), 'day');
+
+  if (g.getDivId() != null) {
+    // Add a sample task 1
+    g.AddTaskItem({
+      pID: 1,
+      pName: "Design UI",
+      pStart: "2025-07-01",
+      pEnd: "2025-07-03",
+      pClass: "gtaskblue",
+      pComplete: 50,
+      pLink: "",
+      pGroup: 0,
+      pParent: 0,
+      pOpen: 1,
+      pRes: "Rupavathi"
+    });
+
+    // Add a sample task 2
+    g.AddTaskItem({
+      pID: 2,
+      pName: "Integrate APIs",
+      pStart: "2025-07-04",
+      pEnd: "2025-07-06",
+      pClass: "gtaskgreen",
+      pComplete: 20,
+      pLink: "",
+      pGroup: 0,
+      pParent: 0,
+      pOpen: 1,
+      pRes: "Dev Team"
+    });
+
+    // Draw the chart
+    g.Draw();
+  }
+});
+</script>
+
+
 </body>
 </html>
