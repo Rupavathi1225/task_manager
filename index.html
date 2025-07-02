@@ -1137,6 +1137,20 @@
             margin-right: 0.75rem;
             width: auto; /* Override full width for checkboxes */
         }
+        /* NEW: Style for the "Mark Selected as Task" button */
+        #markSelectedAsTaskBtn {
+            margin-left: 1rem; /* Space from the Select/Select All button */
+            background-color: #10b981; /* Green color */
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            display: none; /* Hidden by default */
+            transition: background-color 0.2s ease;
+        }
+        #markSelectedAsTaskBtn:hover {
+            background-color: #059669; /* Darker green on hover */
+        }
     </style>
 </head>
 <body>
@@ -1317,6 +1331,10 @@
                     <!-- MODIFIED: Changed from checkbox to button -->
                     <button id="chatSelectionToggleBtn" class="bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700 text-sm">
                         Select
+                    </button>
+                    <!-- NEW: Button to mark selected messages as task -->
+                    <button id="markSelectedAsTaskBtn" class="bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700 text-sm hidden">
+                        Mark Selected as Task
                     </button>
                 </div>
                 <div class="chat-messages" id="chatMessages">
@@ -1937,6 +1955,7 @@
         let allTasks = [];
         let currentUser = null;
         let currentUserData = {};
+        let usersMap = {}; // NEW: Map to store user UID to username mapping
         let unsubscribeUserTasks = null;
         let unsubscribeAllTasks = null;
         let unsubscribeUser = null;
@@ -2027,7 +2046,10 @@
         // MODIFIED: Changed from checkbox to button
         const chatSelectionToggleBtn = document.getElementById('chatSelectionToggleBtn'); 
         const chatContainer = document.getElementById('chatContainer'); // Reference to the chat-container for class toggling
-        let selectedMessageBubbles = new Set(); // To store selected message elements
+        let selectedMessageBubbles = new Set(); // To store selected message elements (DOM elements)
+        // NEW: Mark Selected as Task button
+        const markSelectedAsTaskBtn = document.getElementById('markSelectedAsTaskBtn');
+
 
         // NEW: Assign Task from Chat Page elements
         const assignTaskFromChatSection = document.getElementById('assignTaskFromChatSection');
@@ -2161,11 +2183,16 @@
             if (chatSelectionToggleBtn) {
                 chatSelectionToggleBtn.addEventListener('click', toggleChatSelectionMode);
             }
+            // NEW: Listen for click on "Mark Selected as Task" button
+            if (markSelectedAsTaskBtn) {
+                markSelectedAsTaskBtn.addEventListener('click', handleMarkSelectedAsTaskClick);
+            }
             chatMessagesEl.addEventListener('change', handleMessageCheckboxChange);
 
-            // Context Menu Listener
+            // Context Menu Listener (only for single message context, not multi-select action)
             chatMessagesEl.addEventListener('contextmenu', showMessageContextMenu);
-            contextMenuMarkAsTaskBtn.addEventListener('click', handleMarkAsTaskClick);
+            // The contextMenuMarkAsTaskBtn is for single message context, so it will still pre-fill based on that single message.
+            contextMenuMarkAsTaskBtn.addEventListener('click', handleMarkSingleAsTaskClick); // Renamed for clarity
             contextMenuReplyBtn.addEventListener('click', () => showCustomAlert('Reply', 'Reply functionality coming soon!'));
             contextMenuShareBtn.addEventListener('click', () => showCustomAlert('Share', 'Share functionality coming soon!'));
 
@@ -2213,6 +2240,9 @@
         async function populateAssignToDropdown() {
             try {
                 const usersSnapshot = await getDocs(collection(db, "users"));
+                // Clear and repopulate usersMap
+                usersMap = {}; 
+
                 const assignToSelects = [
                     document.getElementById('assignTaskAssignTo'), // New assign task page dropdown
                     document.getElementById('ganttAssignedTo') // Add the new Gantt assignedTo dropdown
@@ -2223,6 +2253,7 @@
                         select.innerHTML = '<option value="">-- Select Assignee --</option>'; // Default option
                         usersSnapshot.forEach((doc) => {
                             const user = doc.data();
+                            usersMap[doc.id] = user; // Populate usersMap
                             const option = document.createElement('option');
                             option.value = doc.id; // User UID
                             option.textContent = user.username || 'Unnamed User';
@@ -2428,19 +2459,21 @@
         // NEW: Chat-to-Task functions
         function renderInitialChatMessages() {
             const initialMessages = [
-                { id: 'msg1', sender: 'Sarah Chen', text: 'We need to design the homepage by Monday.', time: '10:09 AM', avatar: 'https://placehold.co/40x40/f87171/ffffff?text=SC' },
-                { id: 'msg2', sender: 'You', text: 'Sounds good! Should we include the new branding elements?', time: '10:11 AM', avatar: localStorage.getItem("userAvatar") || "https://placehold.co/40x40/6366f1/ffffff?text=U", sent: true },
-                { id: 'msg3', sender: 'Mike Rodriguez', text: 'New branding elements are a must. Also, ensure the mobile layout is optimized for performance.', time: '10:12 AM', avatar: 'https://placehold.co/40x40/34d399/ffffff?text=MR' }
+                { id: 'msg1', sender: 'Sarah Chen', senderId: 'sarah_uid', text: 'We need to design the homepage by Monday.', time: '10:09 AM', avatar: 'https://placehold.co/40x40/f87171/ffffff?text=SC' },
+                { id: 'msg2', sender: 'You', senderId: currentUser ? currentUser.uid : 'current_user_placeholder', text: 'Sounds good! Should we include the new branding elements?', time: '10:11 AM', avatar: localStorage.getItem("userAvatar") || "https://placehold.co/40x40/6366f1/ffffff?text=U", sent: true },
+                { id: 'msg3', sender: 'Mike Rodriguez', senderId: 'mike_uid', text: 'New branding elements are a must. Also, ensure the mobile layout is optimized for performance.', time: '10:12 AM', avatar: 'https://placehold.co/40x40/34d399/ffffff?text=MR' }
             ];
             
             chatMessagesEl.innerHTML = '';
             initialMessages.forEach(msg => addMessageToChat(msg));
         }
 
-        function addMessageToChat({ id, sender, text, time, avatar, sent = false }) {
+        function addMessageToChat({ id, sender, senderId, text, time, avatar, sent = false }) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `chat-message ${sent ? 'sent' : ''}`;
             messageDiv.dataset.messageId = id; // Store message ID for selection
+            messageDiv.dataset.senderId = senderId; // Store sender ID
+            messageDiv.dataset.senderName = sender; // Store sender name
 
             messageDiv.innerHTML = `
                 <input type="checkbox" class="message-checkbox h-4 w-4 text-indigo-600 rounded">
@@ -2463,6 +2496,7 @@
                 const message = {
                     id: `msg${Date.now()}`, // Simple unique ID
                     sender: 'You',
+                    senderId: currentUser ? currentUser.uid : 'current_user_placeholder', // Use current user's ID
                     text: text,
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     avatar: localStorage.getItem("userAvatar") || "https://placehold.co/40x40/6366f1/ffffff?text=U",
@@ -2482,20 +2516,107 @@
             
             // Store the message text in the context menu's dataset
             messageContextMenu.dataset.messageText = messageBubble.textContent;
+            // Also store sender ID for single message context menu
+            messageContextMenu.dataset.senderId = messageBubble.closest('.chat-message').dataset.senderId;
 
             messageContextMenu.style.display = 'block';
             messageContextMenu.style.top = `${e.pageY}px`;
             messageContextMenu.style.left = `${e.pageX}px`;
         }
 
-        function handleMarkAsTaskClick() {
+        // NEW: Handles "Mark as Task" for a single message from the context menu
+        function handleMarkSingleAsTaskClick() {
             const messageText = messageContextMenu.dataset.messageText;
+            const senderId = messageContextMenu.dataset.senderId;
             if (!messageText) return;
 
             assignTaskTitle.value = messageText; // Pre-fill the title on the new page
+            
+            // Reset collaborators
+            collaboratorsDropdownList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+            // Set assignee and collaborators based on the single message sender
+            if (senderId && usersMap[senderId]) {
+                assignTaskAssignTo.value = senderId;
+                // If the sender is not the current user, add current user as collaborator
+                if (currentUser && senderId !== currentUser.uid) {
+                    const currentUserCheckbox = collaboratorsDropdownList.querySelector(`input[data-uid="${currentUser.uid}"]`);
+                    if (currentUserCheckbox) currentUserCheckbox.checked = true;
+                }
+            } else if (currentUser) { // Default to current user if sender is unknown
+                assignTaskAssignTo.value = currentUser.uid;
+            } else {
+                assignTaskAssignTo.value = ''; // No default if no user logged in
+            }
+            updateCollaboratorsDisplay();
+
             showSection('assignTaskFromChatSection'); // Navigate to the new page
             messageContextMenu.style.display = 'none'; // Hide context menu
         }
+
+        // NEW: Handles "Mark Selected as Task" for multiple messages from the button
+        function handleMarkSelectedAsTaskClick() {
+            if (selectedMessageBubbles.size === 0) {
+                showCustomAlert("No Messages Selected", "Please select at least one message to mark as a task.");
+                return;
+            }
+
+            let combinedText = [];
+            let uniqueSenderIds = new Set();
+
+            selectedMessageBubbles.forEach(messageDiv => {
+                combinedText.push(messageDiv.querySelector('.message-bubble').textContent);
+                const senderId = messageDiv.dataset.senderId;
+                if (senderId) {
+                    uniqueSenderIds.add(senderId);
+                }
+            });
+
+            assignTaskTitle.value = combinedText.join('\n'); // Join texts with new lines
+
+            // Determine primary assignee
+            let primaryAssigneeId = '';
+            if (currentUser && uniqueSenderIds.has(currentUser.uid)) {
+                primaryAssigneeId = currentUser.uid;
+            } else if (uniqueSenderIds.size > 0) {
+                primaryAssigneeId = uniqueSenderIds.values().next().value; // First sender in the set
+            }
+            assignTaskAssignTo.value = primaryAssigneeId;
+
+            // Reset all collaborator checkboxes
+            collaboratorsDropdownList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+
+            // Set collaborators
+            uniqueSenderIds.forEach(senderId => {
+                if (senderId !== primaryAssigneeId) {
+                    const collaboratorCheckbox = collaboratorsDropdownList.querySelector(`input[data-uid="${senderId}"]`);
+                    if (collaboratorCheckbox) {
+                        collaboratorCheckbox.checked = true;
+                    }
+                }
+            });
+            // Ensure current user is always a collaborator if they are involved and not the primary assignee
+            if (currentUser && uniqueSenderIds.has(currentUser.uid) && currentUser.uid !== primaryAssigneeId) {
+                 const currentUserCheckbox = collaboratorsDropdownList.querySelector(`input[data-uid="${currentUser.uid}"]`);
+                 if (currentUserCheckbox) currentUserCheckbox.checked = true;
+            } else if (currentUser && !primaryAssigneeId) { // If no primary assignee, and current user is logged in, make them default collaborator
+                const currentUserCheckbox = collaboratorsDropdownList.querySelector(`input[data-uid="${currentUser.uid}"]`);
+                if (currentUserCheckbox) currentUserCheckbox.checked = true;
+            }
+
+
+            updateCollaboratorsDisplay(); // Update the display text for collaborators
+
+            showSection('assignTaskFromChatSection'); // Navigate to the new page
+            // Reset chat selection mode after creating task
+            chatContainer.classList.remove('chat-selection-mode');
+            chatSelectionToggleBtn.textContent = 'Select';
+            markSelectedAsTaskBtn.style.display = 'none'; // Hide the button
+            selectedMessageBubbles.clear();
+            chatMessagesEl.querySelectorAll('.message-checkbox').forEach(cb => cb.checked = false);
+            chatMessagesEl.querySelectorAll('.chat-message').forEach(msg => msg.classList.remove('selected'));
+        }
+
 
         // NEW: Multi-selection functions
         // MODIFIED: This function now toggles the selection mode
@@ -2507,6 +2628,7 @@
                 // Entering selection mode
                 chatContainer.classList.add('chat-selection-mode');
                 chatSelectionToggleBtn.textContent = 'Select All';
+                markSelectedAsTaskBtn.style.display = 'inline-block'; // Show the new button
                 selectedMessageBubbles.clear(); // Clear any previous selections
                 messageCheckboxes.forEach(checkbox => {
                     checkbox.checked = false;
@@ -2530,6 +2652,7 @@
                 if (allChecked) {
                     chatContainer.classList.remove('chat-selection-mode');
                     chatSelectionToggleBtn.textContent = 'Select';
+                    markSelectedAsTaskBtn.style.display = 'none'; // Hide the button
                     selectedMessageBubbles.clear();
                 }
             }
@@ -2548,8 +2671,7 @@
                     selectedMessageBubbles.delete(messageDiv);
                 }
 
-                // If all messages are now selected, update the header button to "Deselect All"
-                // If some are selected, keep it as "Select All" (or "Deselect All" if all were already selected)
+                // Update the "Select All" / "Deselect All" button text
                 const allCheckboxes = chatMessagesEl.querySelectorAll('.message-checkbox');
                 if (selectedMessageBubbles.size === allCheckboxes.length && allCheckboxes.length > 0) {
                     chatSelectionToggleBtn.textContent = 'Deselect All';
@@ -3569,6 +3691,7 @@
                 // NEW: Reset chat selection mode when entering chat section
                 chatContainer.classList.remove('chat-selection-mode');
                 chatSelectionToggleBtn.textContent = 'Select';
+                markSelectedAsTaskBtn.style.display = 'none'; // Hide the button
                 selectedMessageBubbles.clear();
                 chatMessagesEl.querySelectorAll('.message-checkbox').forEach(cb => cb.checked = false);
                 chatMessagesEl.querySelectorAll('.chat-message').forEach(msg => msg.classList.remove('selected'));
@@ -3716,9 +3839,8 @@
 
                     const collaboratorsHtml = task.collaborators && task.collaborators.length > 0
                         ? `<p class="flex items-center"><i class="fas fa-users mr-2 text-indigo-500"></i> Collaborators: <span class="font-medium text-gray-700">${task.collaborators.map(id => {
-                            // Find username from allTasks or a separate user list if available
-                            const user = allTasks.find(t => t.assignedTo === id); // This is a hack, should use a dedicated user list
-                            return user ? user.assignedToName : 'Unknown';
+                            // Find username from usersMap
+                            return usersMap[id] ? usersMap[id].username : 'Unknown';
                         }).join(', ')}</span></p>`
                         : '';
 
