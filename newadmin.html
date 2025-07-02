@@ -377,6 +377,16 @@
                         <h3 class="text-lg font-semibold text-red-800 flex items-center justify-center gap-2"><i class="fas fa-flag"></i> Red Flags (Overdue)</h3>
                         <p id="totalRedFlags" class="text-3xl font-bold text-red-900 mt-2">0</p>
                     </div>
+                    <!-- New: Pending Tasks -->
+                    <div class="flex-1 p-4 bg-yellow-100 rounded-xl text-center shadow-sm transition-transform transform hover:scale-105">
+                        <h3 class="text-lg font-semibold text-yellow-800 flex items-center justify-center gap-2"><i class="fas fa-hourglass-half"></i> Pending Tasks</h3>
+                        <p id="totalPendingTasks" class="text-3xl font-bold text-yellow-900 mt-2">0</p>
+                    </div>
+                    <!-- New: Total Points -->
+                    <div class="flex-1 p-4 bg-blue-100 rounded-xl text-center shadow-sm transition-transform transform hover:scale-105">
+                        <h3 class="text-lg font-semibold text-blue-800 flex items-center justify-center gap-2"><i class="fas fa-star"></i> Total Points</h3>
+                        <p id="totalUserPoints" class="text-3xl font-bold text-blue-900 mt-2">0</p>
+                    </div>
                 </div>
                 <div class="table-wrapper">
                     <table id="progressTable">
@@ -385,9 +395,12 @@
                                 <th class="py-3 px-4">User Email</th>
                                 <th class="py-3 px-4 text-center">Assigned</th>
                                 <th class="py-3 px-4 text-center">Completed</th>
+                                <th class="py-3 px-4 text-center">Pending</th> <!-- New: Pending column -->
                                 <th class="py-3 px-4 text-center">Progress</th>
                                 <th class="py-3 px-4 text-center">Green Flags</th>
                                 <th class="py-3 px-4 text-center">Red Flags</th>
+                                <th class="py-3 px-4 text-center">Total Points</th> <!-- New: Total Points column -->
+                                <th class="py-3 px-4 text-center">Time Spent</th> <!-- New: Time Spent column -->
                             </tr>
                         </thead>
                         <tbody>
@@ -535,7 +548,7 @@
         apiKey: "AIzaSyCYF8V_BDf34UjEYAyDLLFs9cgb7IEjO7I",
         authDomain: "taskmanager-b93e4.firebaseapp.com",
         projectId: "taskmanager-b93e4",
-        storageBucket: "taskmanager-b93e4.firebasestorage.app",
+        storageBucket: "taskmanager-b93e4.firebaseapp.com",
         messagingSenderId: "613129920368",
         appId: "1:613129920368:web:6077e6ae85031c29f4b9b5",
         measurementId: "G-W5C4YSJSDZ"
@@ -637,9 +650,11 @@
         const progressTableBody = document.querySelector('#progressTable tbody');
         const totalGreenFlagsEl = document.getElementById('totalGreenFlags');
         const totalRedFlagsEl = document.getElementById('totalRedFlags');
+        const totalPendingTasksEl = document.getElementById('totalPendingTasks'); 
+        const totalUserPointsEl = document.getElementById('totalUserPoints'); // Get total points element
 
         if (!progressTableBody) return;
-        progressTableBody.innerHTML = '<tr><td colspan="6">Loading progress...</td></tr>';
+        progressTableBody.innerHTML = '<tr><td colspan="9">Loading progress...</td></tr>'; // Increased colspan to 9
 
         try {
             const usersSnapshot = await getDocs(collection(db, 'users'));
@@ -653,14 +668,19 @@
             const userProgress = {};
             let totalGreenFlags = 0;
             let totalRedFlags = 0;
+            let totalPendingTasks = 0;
+            let overallTotalPoints = 0; // Initialize overall total points
 
             for (const userId in users) {
                 userProgress[userId] = {
                     email: users[userId].email || 'N/A',
                     assigned: 0,
                     completed: 0,
+                    pending: 0,
                     greenFlags: 0,
-                    redFlags: 0
+                    redFlags: 0,
+                    totalPoints: 0, // Initialize total points for each user
+                    timeSpent: 0
                 };
             }
 
@@ -677,6 +697,18 @@
                         userProgress[assignedUserId].completed++;
                         userProgress[assignedUserId].greenFlags++;
                         totalGreenFlags++;
+                        userProgress[assignedUserId].totalPoints += (task.points || 0); // Add points for completed tasks
+                        overallTotalPoints += (task.points || 0); // Add to overall total points
+
+                        // Calculate time spent if completedAt and createdAt exist
+                        if (task.createdAt && task.completedAt) {
+                            const createdTime = task.createdAt.toDate().getTime();
+                            const completedTime = task.completedAt.toDate().getTime();
+                            userProgress[assignedUserId].timeSpent += (completedTime - createdTime);
+                        }
+                    } else if (task.status === 'pending' || task.status === 'active') {
+                        userProgress[assignedUserId].pending++;
+                        totalPendingTasks++;
                     }
 
                     // Red flag condition (overdue)
@@ -692,11 +724,22 @@
             for (const userId in userProgress) {
                 const progress = userProgress[userId];
                 const percentage = progress.assigned > 0 ? ((progress.completed / progress.assigned) * 100).toFixed(1) : 0;
+                
+                // Format time spent
+                const totalSeconds = Math.floor(progress.timeSpent / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const formattedTime = `${hours}h ${minutes}m ${seconds}s`;
+
                 const row = progressTableBody.insertRow();
                 row.innerHTML = `
                     <td class="py-3 px-4">${progress.email}</td>
                     <td class="py-3 px-4 text-center">${progress.assigned}</td>
                     <td class="py-3 px-4 text-center">${progress.completed}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="bg-yellow-200 text-yellow-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.pending}</span>
+                    </td>
                     <td class="py-3 px-4">
                         <div class="progress-bar-container">
                             <div class="progress-bar" style="width: ${percentage}%; background-color: var(--primary-color);">
@@ -710,15 +753,21 @@
                     <td class="py-3 px-4 text-center">
                         <span class="bg-red-200 text-red-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.redFlags}</span>
                     </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="bg-blue-200 text-blue-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.totalPoints}</span>
+                    </td>
+                    <td class="py-3 px-4 text-center">${formattedTime}</td>
                 `;
             }
 
             if(totalGreenFlagsEl) totalGreenFlagsEl.textContent = totalGreenFlags;
             if(totalRedFlagsEl) totalRedFlagsEl.textContent = totalRedFlags;
+            if(totalPendingTasksEl) totalPendingTasksEl.textContent = totalPendingTasks;
+            if(totalUserPointsEl) totalUserPointsEl.textContent = overallTotalPoints; // Update overall total points
 
         } catch (error) {
             console.error("Error fetching user progress:", error);
-            progressTableBody.innerHTML = '<tr><td colspan="6" style="color:red;">Error loading progress.</td></tr>';
+            progressTableBody.innerHTML = '<tr><td colspan="9" style="color:red;">Error loading progress.</td></tr>'; // Increased colspan
         }
     }
 
