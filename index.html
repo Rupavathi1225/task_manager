@@ -3009,17 +3009,20 @@
         function loadTasksIntoCalendar() {
             if (!calendar) return;
             
-            const calendarEvents = allTasks.map(task => ({
-                id: task.id,
-                title: task.title,
-                start: task.dueDate,
-                allDay: false,
-                color: getPriorityColor(task.priority),
-                extendedProps: {
-                    description: task.description,
-                    status: task.status
-                }
-            }));
+           const calendarEvents = allTasks
+  .filter(task => task.assignedTo === currentUserName)
+  .map(task => ({
+    id: task.id,
+    title: task.title,
+    start: task.dueDate,
+    allDay: false,
+    color: getPriorityColor(task.priority),
+    extendedProps: {
+        description: task.description,
+        status: task.status
+    }
+  }));
+
             
             calendar.removeAllEvents();
             calendar.addEventSource(calendarEvents);
@@ -3064,7 +3067,7 @@
             
             const now = new Date(); // Current time for overdue check
 
-            const filteredTasks = allTasks.filter(task => {
+            const filteredTasks = userTasks.filter(task => {
                 // Priority filter
                 if (priorityFilterValue !== 'all' && task.priority !== priorityFilterValue) return false;
                 
@@ -3703,6 +3706,8 @@
         setInterval(updateCurrentDate, 60000);
     </script>
     <script>
+        const currentUser = document.getElementById("usernameDisplay").innerText.trim();
+
 let timerInterval;
 let secondsElapsed = 0;
 
@@ -3879,11 +3884,14 @@ document.addEventListener('DOMContentLoaded', function() {
       pOpen: 1,
       pRes: "Dev Team"
     });
+    
 
     // Draw the chart
     g.Draw();
   }
 });
+const currentUserName = document.getElementById("usernameDisplay").textContent;
+
 </script>
 
 
