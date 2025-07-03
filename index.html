@@ -1198,6 +1198,18 @@
             line-height: 1.2; /* Added line height for better spacing */
         }
 
+        /* --- START: Requested Font Size Modifications --- */
+        /* Decrease font size of the textarea field by 40% */
+        .assign-task-column #assignTaskTitleDisplay {
+            font-size: 60% !important; /* This makes the font size 60% of its original size */
+        }
+
+        /* Increase font size of "Task Title:" label by 2 times */
+        .assign-task-column label[for="assignTaskTitleDisplay"] {
+            font-size: 2em !important; /* This makes the font size 2 times larger. You can change '2em' to '3em' or '4em' for a larger increase. */
+        }
+        /* --- END: Requested Font Size Modifications --- */
+
         /* NEW: Floating "Mark as Task" button for chat */
         /* This style is now for the button inside the header */
         #markSelectedAsTaskBtn {
@@ -1298,22 +1310,120 @@
             max-height: 200px; /* Slightly taller for filter */
         }
 
-        /* --- START: Requested Font Size Modifications --- */
-        /* Decrease font size of the textarea field by 40% */
-        .assign-task-column #assignTaskTitleDisplay {
-            font-size: 25px !important; /* This makes the font size 60% of its original size */
+        /* NEW: Styles for two-column task details in My Tasks Overview */
+        .task-details-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Default to single column on small screens */
+            gap: 0.5rem 0.75rem; /* Row gap, Column gap */
+            margin-bottom: 1rem;
         }
 
-        /* Increase font size of "Task Title:" label by 2 times */
-        .assign-task-column label[for="assignTaskTitleDisplay"] {
-            font-size: 3em !important; /* This makes the font size 2 times larger. You can change '2em' to '3em' or '4em' for a larger increase. */
+        @media (min-width: 640px) { /* Small screens and up */
+            .task-details-grid {
+                grid-template-columns: repeat(3, 1fr); /* Three columns for task details and notes */
+            }
         }
-        /* --- END: Requested Font Size Modifications --- */
-        #assignTaskPage {
-            background-image: url('image.webp');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+
+        .task-details-grid p {
+            margin-bottom: 0; /* Remove default paragraph margin */
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem; /* Slightly smaller font for compactness */
+        }
+
+        .task-details-grid p i {
+            margin-right: 0.5rem;
+            color: #6366f1; /* Indigo color for icons */
+        }
+
+        /* NEW: Styles for the Notes column within My Tasks Overview */
+        .task-notes-column {
+            grid-column: span 1; /* Ensure it takes one column in the grid */
+            border-left: 1px solid #e2e8f0; /* Separator line */
+            padding-left: 0.75rem; /* Padding from separator */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-notes-column h6 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            color: #374151;
+        }
+
+        .task-notes-column ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 120px; /* Reduced height for notes list */
+            overflow-y: auto; /* Make notes scrollable */
+            margin-bottom: 0.5rem;
+            border: 1px solid #fde68a; /* Border for the notes container */
+            border-radius: 4px;
+            background-color: #fffbe6; /* Light yellow background for notes area */
+            padding: 0.5rem;
+        }
+
+        .task-notes-column ul::-webkit-scrollbar {
+            width: 6px;
+        }
+        .task-notes-column ul::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .task-notes-column ul::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        .task-notes-column ul::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        .task-notes-column li {
+            background-color: #fffbe6; /* Light yellow for sticky notes */
+            border: 1px solid #fdfd96; /* Lighter yellow border */
+            padding: 0.4rem;
+            margin-bottom: 0.3rem;
+            border-radius: 4px;
+            font-size: 0.8rem; /* Slightly smaller font for notes */
+            color: #78350f;
+            word-wrap: break-word;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-notes-column li:last-child {
+            margin-bottom: 0;
+        }
+
+        .task-notes-column .delete-note-btn {
+            font-size: 0.7rem; /* Smaller delete button */
+        }
+
+        .task-notes-column .gantt-popup-add-note {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .task-notes-column .gantt-popup-add-note input {
+            flex-grow: 1;
+            padding: 0.4rem;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            font-size: 0.85rem;
+        }
+
+        .task-notes-column .gantt-popup-add-note button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -1832,13 +1942,18 @@
                         <label for="assignTaskParentId" class="block text-gray-700 font-medium mb-1">Parent Task ID (if subtask):</label>
                         <input type="text" id="assignTaskParentId" placeholder="Enter ID of parent task" class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
+                    <!-- MODIFIED: Replaced select with custom dropdown for assignTaskAddTo -->
                     <div class="form-group">
                         <label for="assignTaskAddTo" class="block text-gray-700 font-medium mb-1">Add to:</label>
-                        <select id="assignTaskAddTo" required class="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="personal">Personal Task List</option>
-                            <option value="gantt">Gantt Chart</option>
-                            <option value="note">Sticky Note</option>
-                        </select>
+                        <div class="custom-dropdown-container">
+                            <div class="custom-dropdown-header" id="assignTaskAddToDropdownHeader">
+                                <span class="selected-items" id="assignTaskAddToSelectedText">Personal Task List</span>
+                                <i class="fas fa-chevron-down arrow-icon"></i>
+                            </div>
+                            <div class="custom-dropdown-options" id="assignTaskAddToDropdownOptions">
+                                <!-- Options populated by JS -->
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group mt-4">
                         <label for="assignTaskChecklistInput" class="block text-gray-700 font-medium mb-1">Checklist:</label>
@@ -2253,7 +2368,7 @@
         const assignTaskImageUpload = document.getElementById('assignTaskImageUpload');
         const assignTaskLink = document.getElementById('assignTaskLink');
         const assignTaskParentId = document.getElementById('assignTaskParentId');
-        const assignTaskAddTo = document.getElementById('assignTaskAddTo');
+        // const assignTaskAddTo = document.getElementById('assignTaskAddTo'); // This will be removed and replaced
         const assignTaskStartTimerBtn = document.getElementById('assignTaskStartTimerBtn');
         const assignTaskLiveTimerDisplay = document.getElementById('assignTaskLiveTimerDisplay');
         const assignTaskChecklistInput = document.getElementById('assignTaskChecklistInput');
@@ -2277,6 +2392,11 @@
         const ganttAssigneeDropdownHeader = document.getElementById('ganttAssigneeDropdownHeader');
         const ganttAssigneeDropdownOptions = document.getElementById('ganttAssigneeDropdownOptions');
         const ganttAssigneeSelectedText = document.getElementById('ganttAssigneeSelectedText');
+
+        // NEW: Elements for the assignTaskAddTo custom dropdown
+        const assignTaskAddToDropdownHeader = document.getElementById('assignTaskAddToDropdownHeader');
+        const assignTaskAddToDropdownOptions = document.getElementById('assignTaskAddToDropdownOptions');
+        const assignTaskAddToSelectedText = document.getElementById('assignTaskAddToSelectedText');
 
 
         let selectedChatMessages = []; // To store selected messages for multi-chat-to-task
@@ -2404,6 +2524,9 @@
             if (assignTaskCollaboratorsDropdownHeader) assignTaskCollaboratorsDropdownHeader.addEventListener('click', (e) => toggleCustomDropdown(e, 'assignTaskCollaboratorsDropdownOptions', 'assignTaskCollaboratorsDropdownHeader'));
             if (ganttAssignedToDropdownHeader) ganttAssignedToDropdownHeader.addEventListener('click', (e) => toggleCustomDropdown(e, 'ganttAssignedToDropdownOptions', 'ganttAssignedToDropdownHeader'));
             if (ganttAssigneeDropdownHeader) ganttAssigneeDropdownHeader.addEventListener('click', (e) => toggleCustomDropdown(e, 'ganttAssigneeDropdownOptions', 'ganttAssigneeDropdownHeader'));
+            // NEW: Add event listener for the assignTaskAddTo dropdown
+            if (assignTaskAddToDropdownHeader) assignTaskAddToDropdownHeader.addEventListener('click', (e) => toggleCustomDropdown(e, 'assignTaskAddToDropdownOptions', 'assignTaskAddToDropdownHeader'));
+
 
             // Close custom dropdowns when clicking outside
             window.addEventListener('click', (event) => {
@@ -2450,7 +2573,14 @@
             });
 
             if (selectedNames.length === 0) {
-                selectedTextElement.textContent = isFilter ? 'All Assignees' : '-- Select Assignee(s) --';
+                // Determine default text based on dropdown type
+                if (isFilter) {
+                    selectedTextElement.textContent = 'All Assignees';
+                } else if (dropdownOptionsId === 'assignTaskAddToDropdownOptions') {
+                    selectedTextElement.textContent = '-- Select Destination(s) --'; // Specific default for "Add to"
+                } else {
+                    selectedTextElement.textContent = '-- Select Assignee(s) --';
+                }
             } else if (selectedNames.length === 1) {
                 selectedTextElement.textContent = selectedNames[0];
             } else {
@@ -2524,13 +2654,30 @@
                     true // Is filter dropdown
                 );
 
+                // NEW: Populate Assign Task Add To dropdown
+                const addToOptions = [
+                    { value: 'personal', label: 'Personal Task List' },
+                    { value: 'gantt', label: 'Gantt Chart' },
+                    { value: 'note', label: 'Sticky Note' },
+                    { value: 'calendar', label: 'Calendar View' } // Added Calendar View
+                ];
+                populateSingleCustomDropdown(
+                    'assignTaskAddToDropdownOptions', 
+                    'assignTaskAddToSelectedText', 
+                    addToOptions, 
+                    false, 
+                    false, // No default selection for this multi-select
+                    false, // No 'Self' option for this
+                    true // Indicate that options are custom (not users)
+                );
+
             } catch (error) {
                 console.error("Error populating custom dropdowns: ", error);
             }
         }
 
         // Helper function to populate a single custom dropdown
-        function populateSingleCustomDropdown(optionsId, selectedTextId, users, isFilter = false, selectCurrentUser = false, addSelfOption = false) {
+        function populateSingleCustomDropdown(optionsId, selectedTextId, items, isFilter = false, selectCurrentUser = false, addSelfOption = false, isCustomOptions = false) {
             const optionsContainer = document.getElementById(optionsId);
             if (!optionsContainer) return;
 
@@ -2553,8 +2700,8 @@
                     updateSelectedText(optionsId, selectedTextId, isFilter);
                     if (isFilter) renderGanttChart(); // Trigger Gantt re-render for filter
                 });
-            } else if (!isFilter && !addSelfOption) {
-                // For non-filter, non-self dropdowns, add a default placeholder
+            } else if (!isFilter && !addSelfOption && !isCustomOptions) {
+                // For non-filter, non-self, non-custom dropdowns, add a default placeholder
                 const defaultOptionDiv = document.createElement('div');
                 defaultOptionDiv.className = 'custom-dropdown-option';
                 defaultOptionDiv.innerHTML = `
@@ -2579,19 +2726,31 @@
                 });
             }
 
-            users.forEach((user) => {
-                // Skip adding 'Self' if already added via addSelfOption, or if it's the current user and 'Self' handles it
-                if (addSelfOption && currentUser && user.id === currentUser.uid) {
-                    return; 
+            items.forEach((item) => {
+                let id, label, value, isChecked;
+                if (isCustomOptions) {
+                    // For custom options like "Add to:"
+                    id = `${optionsId}-${item.value}`;
+                    label = item.label;
+                    value = item.value;
+                    isChecked = false; // No default checked for multi-select 'Add to'
+                } else {
+                    // For user lists
+                    // Skip adding 'Self' if already added via addSelfOption, or if it's the current user and 'Self' handles it
+                    if (addSelfOption && currentUser && item.id === currentUser.uid) {
+                        return; 
+                    }
+                    id = `${optionsId}-${item.id}`;
+                    label = item.username || 'Unnamed User';
+                    value = item.id;
+                    isChecked = selectCurrentUser && currentUser && item.id === currentUser.uid;
                 }
 
                 const optionDiv = document.createElement('div');
                 optionDiv.className = 'custom-dropdown-option';
-                const isChecked = selectCurrentUser && currentUser && user.id === currentUser.uid;
-
                 optionDiv.innerHTML = `
-                    <input type="checkbox" id="${optionsId}-${user.id}" value="${user.id}" ${isChecked ? 'checked' : ''}>
-                    <label for="${optionsId}-${user.id}">${user.username || 'Unnamed User'}</label>
+                    <input type="checkbox" id="${id}" value="${value}" ${isChecked ? 'checked' : ''}>
+                    <label for="${id}">${label}</label>
                 `;
                 optionsContainer.appendChild(optionDiv);
 
@@ -2947,8 +3106,12 @@
             const comments = assignTaskComments.value;
             const relatedLink = assignTaskLink.value;
             const parentTaskId = assignTaskParentId.value.trim();
-            const addTo = assignTaskAddTo.value;
             
+            // MODIFIED: Get selected "Add to" values from the new custom dropdown
+            const addToCheckboxes = assignTaskAddToDropdownOptions.querySelectorAll('input[type="checkbox"]:checked');
+            const addToDestinations = Array.from(addToCheckboxes).map(checkbox => checkbox.value);
+
+
             // Get checklist items
             const checklistItems = Array.from(assignTaskChecklistItems.children).map(li => ({
                 text: li.textContent.replace('×', '').trim(), // Remove the 'x' from the text
@@ -2956,8 +3119,8 @@
             }));
 
 
-            if (!currentUser || !title || assignedTo.length === 0 || !dueDate) { // Check for multiple assignees
-                showCustomAlert("Error", "Please fill out all required fields (Task Title, Assign To, Due Date).");
+            if (!currentUser || !title || assignedTo.length === 0 || !dueDate || addToDestinations.length === 0) { // Check for multiple assignees and destinations
+                showCustomAlert("Error", "Please fill out all required fields (Task Title, Assign To, Due Date, Add to).");
                 return;
             }
 
@@ -3010,9 +3173,13 @@
                     dependencies: '' 
                 };
 
-                if (addTo === 'note') {
-                    taskData.notes.push(title);
+                // Handle multiple "Add to" destinations
+                if (addToDestinations.includes('note')) {
+                    taskData.notes.push(title); // Add task title as a note
                 }
+                // No specific action needed for 'personal', 'gantt', 'calendar' here,
+                // as they are covered by the main task creation and listeners.
+                // The task is always saved to 'forms' collection, and listeners populate respective views.
 
                 await addDoc(collection(db, "forms"), taskData);
 
@@ -3021,8 +3188,11 @@
                 assignTaskChecklistItems.innerHTML = '';
                 showCustomAlert("Success", "Task created successfully!");
                 
-                if (addTo === 'gantt') {
+                // Navigate to the first selected destination, or default to myTasksOverviewSection
+                if (addToDestinations.includes('gantt')) {
                     showSection('ganttSection');
+                } else if (addToDestinations.includes('calendar')) { // NEW: Handle navigation to calendar
+                    showSection('calendarSection');
                 } else {
                     showSection('myTasksOverviewSection');
                 }
@@ -4091,7 +4261,7 @@
                     }
 
                     const lockIcon = task.isLocked ? `<i class="fas fa-lock absolute top-4 right-4 text-red-500 text-xl" title="This task is locked and cannot be modified."></i>` : '';
-                    const lockStatusClass = task.isLocked ? 'border-l-4 border-red-500 pl-4' : '';
+                    const lockStatusClass = task.isLocked ? 'border-l-4 border-red-500 pl-4' : '' ; // Added conditional class for locked tasks
 
                     let flagIcon = '';
                     if (task.status === 'completed') {
@@ -4151,73 +4321,79 @@
 
                     // MODIFIED: Display assignedToNames (array of names)
                     const assignedToNamesHtml = task.assignedToNames && task.assignedToNames.length > 0
-                        ? `<p class="flex items-center"><i class="fas fa-user-tag mr-2 text-indigo-500"></i> Assigned To: <span class="font-medium text-gray-700">${task.assignedToNames.join(', ')}</span></p>`
+                        ? `<p><i class="fas fa-user-tag"></i> Assigned To: <span class="font-medium text-gray-700">${task.assignedToNames.join(', ')}</span></p>`
                         : '';
 
                     const collaboratorsHtml = task.collaborators && task.collaborators.length > 0
-                        ? `<p class="flex items-center"><i class="fas fa-users mr-2 text-indigo-500"></i> Collaborators: <span class="font-medium text-gray-700">${task.collaborators.map(id => {
+                        ? `<p><i class="fas fa-users"></i> Collaborators: <span class="font-medium text-gray-700">${task.collaborators.map(id => {
                             // Find username from allTasks or a separate user list if available
                             const user = allTasks.find(t => t.assignedTo && t.assignedTo.includes(id)); // This is a hack, should use a dedicated user list
                             return user ? user.assignedToNames.find(name => name) : 'Unknown'; // Find first name if multiple
                         }).filter(name => name).join(', ')}</span></p>`
                         : '';
 
-                    const subtaskHtml = task.isSubtask ? `<p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Subtask: <span class="font-medium text-gray-700">Yes</span></p>` : '';
-                    const parentTaskHtml = task.parentTaskId ? `<p class="flex items-center"><i class="fas fa-link mr-2 text-indigo-500"></i> Parent Task ID: <span class="font-medium text-gray-700">${task.parentTaskId}</span></p>` : '';
-                    const imageUrlHtml = task.imageUrl ? `<p class="flex items-center"><i class="fas fa-image mr-2 text-indigo-500"></i> Image: <a href="${task.imageUrl}" target="_blank" class="text-blue-500 hover:underline">View Image</a></p>` : '';
-                    const relatedLinkHtml = task.relatedLink ? `<p class="flex items-center"><i class="fas fa-external-link-alt mr-2 text-indigo-500"></i> Link: <a href="${task.relatedLink}" target="_blank" class="text-blue-500 hover:underline">Open Link</a></p>` : '';
+                    const subtaskHtml = task.isSubtask ? `<p><i class="fas fa-code-branch"></i> Subtask: <span class="font-medium text-gray-700">Yes</span></p>` : '';
+                    const parentTaskHtml = task.parentTaskId ? `<p><i class="fas fa-link"></i> Parent Task ID: <span class="font-medium text-gray-700">${task.parentTaskId}</span></p>` : '';
+                    const imageUrlHtml = task.imageUrl ? `<p><i class="fas fa-image"></i> Image: <a href="${task.imageUrl}" target="_blank" class="text-blue-500 hover:underline">View Image</a></p>` : '';
+                    const relatedLinkHtml = task.relatedLink ? `<p><i class="fas fa-external-link-alt"></i> Link: <a href="${task.relatedLink}" target="_blank" class="text-blue-500 hover:underline">Open Link</a></p>` : '';
 
                     const emailHtml = task.taskSpecificEmail 
-                        ? `<p class="flex items-center"><i class="fas fa-envelope mr-2 text-indigo-500"></i> Task Email: <span class="font-medium text-gray-700">${task.taskSpecificEmail}</span></p>`
+                        ? `<p><i class="fas fa-envelope"></i> Task Email: <span class="font-medium text-gray-700">${task.taskSpecificEmail}</span></p>`
                         : '';
-                     taskCard.innerHTML = `
-  <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
-    <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
-    <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
-  </div>
+                    
+                    // MODIFIED: Restructured HTML for 3-column layout
+                    taskCard.innerHTML = `
+                        <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
+                            <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
+                            <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
+                        </div>
 
-  <div class="task-details mt-2 pl-2 text-sm text-gray-700 hidden">
-    <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
-        <div class="flex items-center">
-            <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
-            ${flagIcon}
-        </div>
-    </div>
-    ${lockIcon}
-    <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
-    <div class="text-sm text-gray-500 space-y-1 mb-4">
-        <p class="flex items-center"><i class="fas fa-calendar-alt mr-2 text-indigo-500"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
-        <p class="flex items-center"><i class="fas fa-clock mr-2 text-indigo-500"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
-        <p class="flex items-center"><i class="fas fa-info-circle mr-2 text-indigo-500"></i> Status: ${statusTagHTML}</p>
-        <p class="flex items-center"><i class="fas fa-percentage mr-2 text-indigo-500"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
-        ${emailHtml}
-        <p class="flex items-center"><i class="fas fa-user-edit mr-2 text-indigo-500"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
-        ${assignedToNamesHtml} <!-- MODIFIED: Display assignedToNames -->
-        <p class="flex items-center"><i class="fas fa-code-branch mr-2 text-indigo-500"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
-        <p class="flex items-center"><i class="fas fa-star mr-2 text-indigo-500"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
-        ${subtaskHtml}
-        ${parentTaskHtml}
-        ${collaboratorsHtml}
-        ${imageUrlHtml}
-        ${relatedLinkHtml}
-
-        <div class="gantt-popup-notes">
-            <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
-            ${notesHtml}
-            <div class="gantt-popup-add-note mt-2">
-                <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
-                <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
-            </div>
-        </div>
-        ${commentsHtml}
-    </div>
-    <div class="task-actions flex flex-wrap gap-2 mt-4">
-        ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
-        ${completeButtonHTML}
-        ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
-    </div>
-  </div>
-`;
+                        <div class="task-details mt-2 pl-2 text-sm text-gray-700 hidden">
+                            <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
+                                <div class="flex items-center">
+                                    <span class="priority-tag priority-${task.priority ? task.priority.toLowerCase() : 'low'}">${task.priority || 'Low'}</span>
+                                    ${flagIcon}
+                                </div>
+                            </div>
+                            ${lockIcon}
+                            <p class="text-sm text-gray-600 mb-4">${task.description || 'No description provided.'}</p>
+                            
+                            <div class="task-details-grid">
+                                <!-- Column 1: Core Details -->
+                                <div>
+                                    <p><i class="fas fa-calendar-alt"></i> Due Date: <span class="font-medium text-gray-700">${formattedDueDate}</span></p>
+                                    <p><i class="fas fa-clock"></i> Due Time: <span class="font-medium text-gray-700">${formattedDueTime}</span></p>
+                                    <p><i class="fas fa-info-circle"></i> Status: ${statusTagHTML}</p>
+                                    <p><i class="fas fa-percentage"></i> Progress: <span class="font-medium text-gray-700">${task.progress || 0}%</span></p>
+                                </div>
+                                <!-- Column 2: Assignment & Type -->
+                                <div>
+                                    <p><i class="fas fa-user-edit"></i> Created By: <span class="font-medium text-gray-700">${task.createdBy || 'N/A'}</span></p>
+                                    <p><i class="fas fa-code-branch"></i> Type: <span class="font-medium text-gray-700">${task.taskType || 'General'}</span></p>
+                                    <p><i class="fas fa-star"></i> Points: <span class="font-medium text-gray-700">${task.points || 0}</span></p>
+                                    ${assignedToNamesHtml}
+                                    ${collaboratorsHtml}
+                                </div>
+                                <!-- Column 3: Notes -->
+                                <div class="task-notes-column">
+                                    <h6><i class="fas fa-sticky-note mr-2"></i>Notes:</h6>
+                                    ${notesHtml}
+                                    <div class="gantt-popup-add-note mt-2">
+                                        <input type="text" placeholder="Add a new note..." id="myTasksNewNoteInput-${task.id}" class="flex-grow p-2 border rounded-md">
+                                        <button data-task-id="${task.id}" id="addMyTasksNoteBtn-${task.id}" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Comments remain below the grid -->
+                            ${commentsHtml}
+                            
+                            <div class="task-actions flex flex-wrap gap-2 mt-4">
+                                ${task.status === 'pending' && !task.isLocked ? `<button class="btn-success confirm-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-check mr-2"></i> Confirm</button>` : ''}
+                                ${completeButtonHTML}
+                                ${task.status !== 'completed' && !task.isLocked ? `<button class="btn-danger edit-task-my-tasks flex-1" data-id="${task.id}"><i class="fas fa-edit mr-2"></i> Edit</button>` : ''}
+                            </div>
+                        </div>
+                    `;
 
                     
                     myTasksListContainerEl.appendChild(taskCard);
