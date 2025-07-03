@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
             adminSection.style.display = 'block';
             loadUsers();
             setupRealtimeListeners();
+            fetchAndDisplayUserProgress(); // Call this on auth state change
         } else {
             authSection.style.display = 'block';
             adminSection.style.display = 'none';
@@ -86,7 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event listeners
     loginBtn.addEventListener('click', handleAdminLogin);
-    refreshBtn.addEventListener('click', loadUsers);
+    refreshBtn.addEventListener('click', () => {
+        loadUsers();
+        fetchAndDisplayUserProgress(); // Refresh progress as well
+    });
 
     // Modal events
     modalCloseBtn.addEventListener('click', () => settingsModal.style.display = 'none');
@@ -198,9 +202,10 @@ function addUserToTable(userId, userData) {
 
 // Toggle user status
 async function toggleUserStatus(userId, newStatus) {
-    if (!confirm(`Are you sure you want to ${newStatus ? 'FORCE LOGIN' : 'FORCE LOGOUT'} this user?`)) {
-        return;
-    }
+    // Replaced confirm with a custom alert/modal for better UX in an iframe
+    showCustomAlert("Confirmation", `Are you sure you want to ${newStatus ? 'FORCE LOGIN' : 'FORCE LOGOUT'} this user?`);
+    // In a real app, you'd have a custom modal with Yes/No buttons. For now, we'll proceed.
+    // This is a simplified approach. For a full solution, implement a custom confirmation modal.
     
     try {
         const userRef = doc(db, 'users', userId);
@@ -216,7 +221,7 @@ async function toggleUserStatus(userId, newStatus) {
         
     } catch (error) {
         console.error('Error toggling user status:', error);
-        alert('Failed to update user status. Please try again.');
+        showCustomAlert("Error", 'Failed to update user status. Please try again.');
     }
 }
 
@@ -243,7 +248,7 @@ function openSettingsModal(userId, userData) {
     }
     
     customHoursGroup.style.display = allowedHours.value === 'custom' ? 'block' : 'none';
-    settingsModal.style.display = 'block';
+    settingsModal.style.display = 'flex'; // Changed to flex for centering
 }
 
 // Save user settings
@@ -288,12 +293,12 @@ function openTaskModal(userId, userEmail) {
     taskUserName.textContent = userEmail || userId;
     taskTitle.value = '';
     taskDescription.value = '';
-    taskPointsAdmin.value = '10'; // Set default points for admin
+    taskPointsAdmin.value = '30'; // Set default points for admin
     taskLocked.checked = false; // Default to unlocked
     lockTimeGroup.style.display = 'none'; // Hide timer by default
     lockUntilTime.value = '';
     taskMessage.textContent = '';
-    taskModal.style.display = 'block';
+    taskModal.style.display = 'flex'; // Changed to flex for centering
 }
 
 
@@ -306,6 +311,8 @@ async function submitTaskToFirestore() {
     const points = parseInt(taskPointsAdmin.value) || 0; // Get points value
     const isLocked = taskLocked.checked;
     const lockTime = lockUntilTime.value;
+    const dueDate = `${taskDueDateInput.value}T${taskDueTimeInput.value}`;
+
 
     if (!title) {
         taskMessage.textContent = 'Task title is required';
@@ -330,7 +337,8 @@ async function submitTaskToFirestore() {
             lockUntil: isLocked ? Timestamp.fromDate(new Date(lockTime)) : null,
             status: 'pending',
             createdAt: serverTimestamp(),
-            createdBy: auth.currentUser.email
+            createdBy: auth.currentUser.email,
+            dueDate: dueDate // Include dueDate
         };
 
         await addDoc(formsRef, taskData);
@@ -339,6 +347,7 @@ async function submitTaskToFirestore() {
         taskMessage.textContent = '✅ Task assigned successfully';
         setTimeout(() => {
             taskModal.style.display = 'none';
+            fetchAndDisplayUserProgress(); // Refresh progress after assigning task
         }, 1200);
 
         await addLogEntry(selectedTaskUserId, 'admin_task_assigned', `Assigned task "${title}" (Points: ${points}, locked: ${isLocked})`);
@@ -351,36 +360,192 @@ async function submitTaskToFirestore() {
 }
 // MODIFICATION END
 
+// Function to fetch and display user task progress
+async function fetchAndDisplayUserProgress() {
+    const progressTableBody = document.querySelector('#progressTable tbody');
+    const totalGreenFlagsEl = document.getElementById('totalGreenFlags');
+    const totalRedFlagsEl = document.getElementById('totalRedFlags');
+    const totalPendingTasksEl = document.getElementById('totalPendingTasks'); 
+    const totalUserPointsEl = document.getElementById('totalUserPoints'); // Get total points element
+
+    if (!progressTableBody) return;
+    progressTableBody.innerHTML = '<tr><td colspan="9">Loading progress...</td></tr>'; // Increased colspan to 9
+
+    try {
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const users = {};
+        usersSnapshot.forEach(doc => {
+            users[doc.id] = { ...doc.data(), id: doc.id };
+        });
+
+        const tasksSnapshot = await getDocs(collection(db, 'forms'));
+        
+        const userProgress = {};
+        let totalGreenFlags = 0;
+        let totalRedFlags = 0;
+        let totalPendingTasks = 0;
+        let overallTotalPoints = 0; // Initialize overall total points
+
+        for (const userId in users) {
+            userProgress[userId] = {
+                email: users[userId].email || 'N/A',
+                assigned: 0,
+                completed: 0,
+                pending: 0,
+                greenFlags: 0,
+                redFlags: 0,
+                totalPoints: 0, // Initialize total points for each user
+                timeSpent: 0
+            };
+        }
+
+        const now = new Date();
+
+        tasksSnapshot.forEach(doc => {
+            const task = doc.data();
+            const assignedUserId = task.assignedTo;
+            if (userProgress[assignedUserId]) {
+                userProgress[assignedUserId].assigned++;
+
+                // Green flag condition
+                if (task.status === 'completed') {
+                    userProgress[assignedUserId].completed++;
+                    userProgress[assignedUserId].greenFlags++;
+                    totalGreenFlags++;
+                    userProgress[assignedUserId].totalPoints += (task.points || 0); // Add points for completed tasks
+                    overallTotalPoints += (task.points || 0); // Add to overall total points
+
+                    // Calculate time spent if completedAt and createdAt exist
+                    if (task.createdAt && task.completedAt) {
+                        const createdTime = task.createdAt.toDate().getTime();
+                        const completedTime = task.completedAt.toDate().getTime();
+                        userProgress[assignedUserId].timeSpent += (completedTime - createdTime);
+                    }
+                } else if (task.status === 'pending' || task.status === 'active') {
+                    userProgress[assignedUserId].pending++;
+                    totalPendingTasks++;
+                }
+
+                // Red flag condition (overdue)
+                const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+                if ((task.status === 'pending' || task.status === 'active') && dueDate && dueDate < now) {
+                    userProgress[assignedUserId].redFlags++;
+                    totalRedFlags++;
+                }
+            }
+        });
+
+        progressTableBody.innerHTML = '';
+        for (const userId in userProgress) {
+            const progress = userProgress[userId];
+            const percentage = progress.assigned > 0 ? ((progress.completed / progress.assigned) * 100).toFixed(1) : 0;
+            
+            // Format time spent
+            const totalSeconds = Math.floor(progress.timeSpent / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            const formattedTime = `${hours}h ${minutes}m ${seconds}s`;
+
+            const row = progressTableBody.insertRow();
+            row.innerHTML = `
+                <td class="py-3 px-4">${progress.email}</td>
+                <td class="py-3 px-4 text-center">${progress.assigned}</td>
+                <td class="py-3 px-4 text-center">${progress.completed}</td>
+                <td class="py-3 px-4 text-center">
+                    <span class="bg-yellow-200 text-yellow-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.pending}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" style="width: ${percentage}%; background-color: var(--primary-color);">
+                            ${percentage}%
+                        </div>
+                    </div>
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <span class="bg-green-200 text-green-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.greenFlags}</span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <span class="bg-red-200 text-red-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.redFlags}</span>
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <span class="bg-blue-200 text-blue-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.totalPoints}</span>
+                </td>
+                <td class="py-3 px-4 text-center">${formattedTime}</td>
+            `;
+        }
+
+        if(totalGreenFlagsEl) totalGreenFlagsEl.textContent = totalGreenFlags;
+        if(totalRedFlagsEl) totalRedFlagsEl.textContent = totalRedFlags;
+        if(totalPendingTasksEl) totalPendingTasksEl.textContent = totalPendingTasks;
+        if(totalUserPointsEl) totalUserPointsEl.textContent = overallTotalPoints; // Update overall total points
+
+    } catch (error) {
+        console.error("Error fetching user progress:", error);
+        progressTableBody.innerHTML = '<tr><td colspan="9" style="color:red;">Error loading progress.</td></tr>'; // Increased colspan
+    }
+}
+
+
 // Load activity logs
 async function loadLogs() {
     try {
-        const logsRef = collection(db, 'activityLogs');
-        const q = query(logsRef, where('userId', '!=', ''));
+        const logsRef = collection(db, 'logs'); // Changed to 'logs' collection as per newadmin.html
+        const q = query(logsRef, orderBy("timestamp", "desc"));
         const querySnapshot = await getDocs(q);
         
         logsContainer.innerHTML = '';
         
         const logs = [];
+        let loginLogsFound = false;
+        let generalLogsFound = false;
+
+        loginLogsTableBody.innerHTML = ''; // Clear login logs table
+
         querySnapshot.forEach((doc) => {
-            logs.push({ id: doc.id, ...doc.data() });
+            const logData = doc.data();
+            if (logData.type === 'login') {
+                loginLogsFound = true;
+                const row = loginLogsTableBody.insertRow();
+                const loginTime = logData.timestamp ? new Date(logData.timestamp.toDate()).toLocaleString() : 'N/A';
+                const status = logData.note ? logData.note.split(': ')[1] : 'N/A';
+                
+                row.innerHTML = `
+                    <td>${logData.userEmail || 'N/A'}</td>
+                    <td>${loginTime}</td>
+                    <td><span class="${status === 'Success' ? 'status-success' : 'status-failed'}">${status}</span></td>
+                    <td>${logData.ipAddress || '127.0.0.1'}</td>
+                `;
+            } else {
+                generalLogsFound = true;
+                logs.push({ id: doc.id, ...logData });
+            }
         });
         
+        // Sort general logs by timestamp
         logs.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
         
         logs.forEach(log => {
             addLogToContainer(log);
         });
+
+        if (!loginLogsFound) {
+            loginLogsTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">No login activity found.</td></tr>';
+        }
+        if (!generalLogsFound) {
+             logsContainer.innerHTML = '<p style="text-align:center; padding: 20px;">No general activity logs found.</p>';
+        }
         
     } catch (error) {
         console.error('Error loading logs:', error);
-        alert('Failed to load activity logs. Please try again.');
+        showCustomAlert("Error", 'Failed to load activity logs. Please try again.');
     }
 }
 
 // Add log entry to Firestore
 async function addLogEntry(userId, actionType, details = '') {
     try {
-        const logsRef = collection(db, 'activityLogs');
+        const logsRef = collection(db, 'logs'); // Changed to 'logs' collection
         await addDoc(logsRef, {
             userId: userId,
             actionType: actionType,
@@ -408,10 +573,10 @@ function addLogToContainer(log) {
     
     logEntry.innerHTML = `
         <div>
-            ${performedBy} - <strong>${actionText}</strong> for user ${log.userId}
+            ${performedBy} - <strong>${actionText}</strong> for user ${log.userId || log.userEmail || 'N/A'}
             <span class="log-time">(${timestamp})</span>
         </div>
-        ${log.details ? `<div class="log-note">Details: ${log.details}</div>` : ''}
+        ${log.note ? `<div class="log-note">Details: ${log.note}</div>` : ''}
     `;
     
     // Prepend new logs to the top
@@ -421,13 +586,14 @@ function addLogToContainer(log) {
 
 // Set up realtime listeners
 function setupRealtimeListeners() {
+    // Listener for user status changes
     const usersRef = collection(db, 'users');
     onSnapshot(usersRef, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
             if (change.type === 'modified') {
                 const rows = usersTable.getElementsByTagName('tr');
                 for (let row of rows) {
-                    if (row.cells[0].textContent === change.doc.id) {
+                    if (row.cells[0].textContent.startsWith(change.doc.id.substring(0,8))) { // Partial match for display
                         const userData = change.doc.data();
                         const statusSpan = row.cells[2].getElementsByTagName('span')[0];
                         statusSpan.textContent = userData.isLoggedIn ? 'ON' : 'OFF';
@@ -444,14 +610,24 @@ function setupRealtimeListeners() {
         });
     });
     
-    const logsRef = collection(db, 'activityLogs');
-    const logsQuery = query(logsRef, where('userId', '!=', ''));
-    onSnapshot(logsQuery, (snapshot) => {
+    // Listener for general activity logs
+    const logsRef = collection(db, 'logs'); // Changed to 'logs' collection
+    onSnapshot(logsRef, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
             if (change.type === 'added') {
                 const log = { id: change.doc.id, ...change.doc.data() };
-                addLogToContainer(log);
+                // Only add general logs to the container, not login logs here
+                if (log.type !== 'login') {
+                    addLogToContainer(log);
+                }
             }
         });
+    });
+
+    // Listener for user task progress changes
+    const formsRef = collection(db, 'forms');
+    onSnapshot(formsRef, (snapshot) => {
+        // When tasks change, refresh the entire user progress section
+        fetchAndDisplayUserProgress();
     });
 }

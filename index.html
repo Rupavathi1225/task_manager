@@ -4629,11 +4629,54 @@ document.getElementById("checklistItems")?.addEventListener("click", (e) => {
 
 </script>
 <script>
-  function toggleTaskDetails(headerElement) {
-    const details = headerElement.nextElementSibling;
-    if (details) {
-      details.classList.toggle('hidden');
-    }
+function toggleTaskDetails(headerElement) {
+  const details = headerElement.nextElementSibling;
+  if (details) {
+    details.classList.toggle('hidden');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Create a Gantt chart inside the ganttChart div
+  const g = new JSGantt.GanttChart(document.getElementById('ganttChart'), 'day');
+
+  if (g.getDivId() != null) {
+    // Add a sample task 1
+    g.AddTaskItem({
+      pID: 1,
+      pName: "Design UI",
+      pStart: "2025-07-01",
+      pEnd: "2025-07-03",
+      pClass: "gtaskblue",
+      pComplete: 50,
+      pLink: "",
+      pGroup: 0,
+      pParent: 0,
+      pOpen: 1,
+      pRes: "Rupavathi"
+    });
+
+    // Add a sample task 2
+    g.AddTaskItem({
+      pID: 2,
+      pName: "Integrate APIs",
+      pStart: "2025-07-04",
+      pEnd: "2025-07-06",
+      pClass: "gtaskgreen",
+      pComplete: 20,
+      pLink: "",
+      pGroup: 0,
+      pParent: 0,
+      pOpen: 1,
+      pRes: "Dev Team"
+    });
+
+    // Draw the chart
+    g.Draw();
+  }
+});
+</script>
+
   }
 </script>
 </body>
