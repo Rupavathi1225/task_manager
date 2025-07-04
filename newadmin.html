@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager - Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5; /* Indigo */
+            --primary-dark: #3730a3;
+            --secondary-color: #10b981; /* Emerald */
+            --accent-color: #f59e0b; /* Amber */
+            --danger-color: #ef4444; /* Red */
+            --bg-light: #f9fafb;
+            --bg-medium: #e5e7eb;
+            --text-dark: #1f2937;
+            --text-medium: #4b5563;
+            --border-color: #d1d5db;
+            --shadow-light: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px; /* Increased max-width for dashboard */
+            margin: 20px auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px var(--shadow-medium);
+            border-radius: 8px; /* Rounded corners */
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            padding: 0 20px;
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        section {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px; /* More rounded corners */
+            box-shadow: 0 4px 12px var(--shadow-medium);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            font-size: 1.5rem; /* Slightly smaller H2 for dashboard view */
+            color: var(--primary-dark);
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate; /* For rounded corners */
+            border-spacing: 0;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden; /* Ensures rounded corners are visible */
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+
+        th, td {
+            padding: 12px 15px; /* Adjusted padding */
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95em;
+        }
+
+        th {
+            background-color: var(--bg-medium);
+            font-weight: 600;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            font-size: 0.85em;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f0f4f8; /* Lighter hover */
+        }
+
+        .status-on, .status-success {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .status-off, .status-failed {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px; /* Slightly more rounded */
+            cursor: pointer;
+            margin-right: 10px; /* Increased space */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            font-size: 1em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px var(--shadow-light);
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px var(--shadow-medium);
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* --- NEW DASHBOARD LAYOUT STYLES --- */
+        .dashboard-layout {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .dashboard-layout > section {
+            flex: 1 1 calc(50% - 15px); /* Two columns, accounting for gap */
+            min-width: 350px; /* Minimum width before wrapping */
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column; /* Stack header and content */
+        }
+
+        .table-wrapper {
+            flex-grow: 1; /* Allows the wrapper to fill available space */
+            overflow-y: auto; /* Makes the table content scrollable if it overflows */
+            max-height: 400px; /* Define a max-height for the scrollable area */
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        /* Specific override for logs container in dashboard view */
+        .dashboard-layout .logs-container {
+            flex-grow: 1;
+            max-height: 400px; /* Sync height with table wrappers */
+        }
+        /* --- END NEW DASHBOARD STYLES --- */
+
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px var(--shadow-medium);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .close {
+            color: var(--text-medium);
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            transition: color 0.2s ease;
+        }
+
+        .close:hover {
+            color: var(--text-dark);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+
+        input[type="email"], input[type="password"], input[type="text"], input[type="date"], input[type="time"], input[type="datetime-local"], input[type="number"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+            color: var(--text-dark);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .logs-container {
+            max-height: 450px;
+            overflow-y: auto;
+            margin-top: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            box-shadow: inset 0 1px 3px var(--shadow-light);
+        }
+
+        .log-entry {
+            padding: 12px;
+            border-bottom: 1px dashed #cbd5e1;
+            color: var(--text-dark);
+            background-color: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 20px;
+            line-height: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+        }
+
+
+        @media (max-width: 1200px) { /* Adjust breakpoint for single column layout */
+            .dashboard-layout > section {
+                flex-basis: 100%; /* Stack to single column */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 15px auto;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            section {
+                padding: 20px;
+            }
+            th, td {
+                padding: 10px 15px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container">
+        <h1><i class="fas fa-user-shield"></i> Task Manager - Admin Panel</h1>
+    </div>
+</header>
+
+<div class="container">
+    <section class="auth-section" id="authSection">
+        <h2>Admin Login</h2>
+        <div class="form-group">
+            <label for="adminEmail">Email</label>
+            <input type="email" id="adminEmail" placeholder="Enter admin email">
+        </div>
+        <div class="form-group">
+            <label for="adminPassword">Password</label>
+            <input type="password" id="adminPassword" placeholder="Enter password">
+        </div>
+        <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+        <p id="authMessage" style="color: red; margin-top: 10px;"></p>
+    </section>
+
+    <!-- Admin Section with new Dashboard Layout -->
+    <div class="admin-section-container" id="adminSection" style="display: none;">
+        <div class="controls">
+            <button id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+            <button id="adminLogoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+        
+        <div class="dashboard-layout">
+            <section id="userManagementSection">
+                <h2><i class="fas fa-users-cog"></i> User Management</h2>
+                <div class="table-wrapper">
+                    <table id="usersTable">
+                        <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Last Active</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- User data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="userProgressSection">
+                <h2><i class="fas fa-chart-line"></i> User Task Progress</h2>
+                 <div class="flex gap-4 mb-6">
+                    <div class="flex-1 p-4 bg-green-100 rounded-xl text-center shadow-sm transition-transform transform hover:scale-105">
+                        <h3 class="text-lg font-semibold text-green-800 flex items-center justify-center gap-2"><i class="fas fa-flag"></i> Green Flags (Completed)</h3>
+                        <p id="totalGreenFlags" class="text-3xl font-bold text-green-900 mt-2">0</p>
+                    </div>
+                    <div class="flex-1 p-4 bg-red-100 rounded-xl text-center shadow-sm transition-transform transform hover:scale-105">
+                        <h3 class="text-lg font-semibold text-red-800 flex items-center justify-center gap-2"><i class="fas fa-flag"></i> Red Flags (Overdue)</h3>
+                        <p id="totalRedFlags" class="text-3xl font-bold text-red-900 mt-2">0</p>
+                    </div>
+                    <!-- New: Pending Tasks -->
+                    <div class="flex-1 p-4 bg-yellow-100 rounded-xl text-center shadow-sm transition-transform transform hover:scale-105">
+                        <h3 class="text-lg font-semibold text-yellow-800 flex items-center justify-center gap-2"><i class="fas fa-hourglass-half"></i> Pending Tasks</h3>
+                        <p id="totalPendingTasks" class="text-3xl font-bold text-yellow-900 mt-2">0</p>
+                    </div>
+                    <!-- New: Total Points -->
+                    <div class="flex-1 p-4 bg-blue-100 rounded-xl text-center shadow-sm transition-transform transform hover:scale-105">
+                        <h3 class="text-lg font-semibold text-blue-800 flex items-center justify-center gap-2"><i class="fas fa-star"></i> Total Points</h3>
+                        <p id="totalUserPoints" class="text-3xl font-bold text-blue-900 mt-2">0</p>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="progressTable">
+                        <thead>
+                            <tr>
+                                <th class="py-3 px-4">User Email</th>
+                                <th class="py-3 px-4 text-center">Assigned</th>
+                                <th class="py-3 px-4 text-center">Completed</th>
+                                <th class="py-3 px-4 text-center">Pending</th> <!-- New: Pending column -->
+                                <th class="py-3 px-4 text-center">Progress</th>
+                                <th class="py-3 px-4 text-center">Green Flags</th>
+                                <th class="py-3 px-4 text-center">Red Flags</th>
+                                <th class="py-3 px-4 text-center">Total Points</th> <!-- New: Total Points column -->
+                                <th class="py-3 px-4 text-center">Time Spent</th> <!-- New: Time Spent column -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Progress data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="loginActivitySection">
+                 <h2><i class="fas fa-history"></i> Admin Login Activity</h2>
+                 <div class="table-wrapper">
+                     <table id="loginLogsTable">
+                         <thead>
+                             <tr>
+                                 <th>Admin Email</th>
+                                 <th>Login Time</th>
+                                 <th>Status</th>
+                                 <th>IP (Placeholder)</th>
+                             </tr>
+                         </thead>
+                         <tbody id="loginLogsTableBody">
+                             <!-- Login logs will be loaded here -->
+                         </tbody>
+                     </table>
+                 </div>
+            </section>
+
+            <section id="generalLogsSection">
+                <h2><i class="fas fa-clipboard-list"></i> General Activity Logs</h2>
+                <div class="logs-container" id="logsContainer">
+                    <!-- General logs will be loaded here -->
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- Modals remain unchanged -->
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2><i class="fas fa-user-cog"></i> User Settings</h2>
+        <p>User: <span id="modalUserName" style="font-weight: 600; color: var(--primary-color);"></span></p>
+        <div class="form-group">
+            <label for="allowedHours">Allowed Login Hours</label>
+            <select id="allowedHours">
+                <option value="any">Any time</option>
+                <option value="business">Business Hours (9AM-6PM)</option>
+                <option value="custom">Custom</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Allowed Days</label>
+            <div id="allowedDaysGroup" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                <label><input type="checkbox" value="Monday"> Mon</label>
+                <label><input type="checkbox" value="Tuesday"> Tue</label>
+                <label><input type="checkbox" value="Wednesday"> Wed</label>
+                <label><input type="checkbox" value="Thursday"> Thu</label>
+                <label><input type="checkbox" value="Friday"> Fri</label>
+                <label><input type="checkbox" value="Saturday"> Sat</label>
+                <label><input type="checkbox" value="Sunday"> Sun</label>
+            </div>
+        </div>
+        <div class="form-group" id="customHoursGroup" style="display: none;">
+            <label>Custom Hours</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="time" id="customStartTime" style="flex: 1;">
+                <span>to</span>
+                <input type="time" id="customEndTime" style="flex: 1;">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="sessionDuration">Max Session Duration (hours)</label>
+            <input type="number" id="sessionDuration" min="1" max="24" value="8">
+        </div>
+        <div class="form-group">
+            <label for="autoLogout">Auto Logout</label>
+            <select id="autoLogout">
+                <option value="enabled">Enabled</option>
+                <option value="disabled">Disabled</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="adminNote">Admin Note</label>
+            <textarea id="adminNote" placeholder="Add notes about this user..."></textarea>
+        </div>
+        <button id="saveSettingsBtn"><i class="fas fa-save"></i> Save Settings</button>
+        <p id="settingsMessage" style="color: red; margin-top: 10px;"></p>
+    </div>
+</div>
+
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <span class="close-task close">&times;</span> <h2><i class="fas fa-tasks"></i> Assign Task</h2>
+        <p>User: <span id="taskUserName" style="font-weight: 600; color: var(--primary-color);"></span></p>
+        <div class="form-group">
+            <label for="taskTitle">Task Title</label>
+            <input type="text" id="taskTitle" placeholder="Enter task title">
+        </div>
+        <div class="form-group">
+            <label for="taskDescription">Task Description</label>
+            <textarea id="taskDescription" placeholder="Enter task description"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="taskPointsAdmin">Points</label>
+            <select id="taskPointsAdmin">
+                <option value="30">30</option>
+                <option value="50">50</option>
+                <option value="80">80</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="taskDueDate">Due Date</label>
+            <input type="date" id="taskDueDate">
+        </div>
+        <div class="form-group">
+            <label for="taskDueTime">Due Time</label>
+            <input type="time" id="taskDueTime">
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="taskLocked">
+                Lock Task
+            </label>
+        </div>
+        <div class="form-group" id="lockTimeGroup" style="display: none;">
+            <label for="lockUntilTime">Lock Until</label>
+            <input type="datetime-local" id="lockUntilTime">
+        </div>
+        <button id="assignTaskBtn"><i class="fas fa-plus-circle"></i> Assign Task</button>
+        <p id="taskMessage" style="color: red; margin-top: 10px;"></p>
+    </div>
+</div>
+
+<script type="module">
+    // Firebase SDK imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, query, where, addDoc, serverTimestamp, getDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+        apiKey: "AIzaSyCYF8V_BDf34UjEYAyDLLFs9cgb7IEjO7I",
+        authDomain: "taskmanager-b93e4.firebaseapp.com",
+        projectId: "taskmanager-b93e4",
+        storageBucket: "taskmanager-b93e4.firebaseapp.com",
+        messagingSenderId: "613129920368",
+        appId: "1:613129920368:web:6077e6ae85031c29f4b9b5",
+        measurementId: "G-W5C4YSJSDZ"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM Elements
+    const authSection = document.getElementById('authSection');
+    const adminSection = document.getElementById('adminSection');
+    const loginBtn = document.getElementById('loginBtn');
+    // The rest of the script remains unchanged as the logic is not affected by the layout change.
+    const authMessage = document.getElementById('authMessage');
+    const usersTableBody = document.querySelector('#usersTable tbody');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const logsContainer = document.getElementById('logsContainer');
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    const loginLogsTableBody = document.getElementById('loginLogsTableBody');
+
+    const settingsModal = document.getElementById('settingsModal');
+    const closeModalBtns = document.querySelectorAll('.close');
+    const modalUserName = document.getElementById('modalUserName');
+    const allowedHoursSelect = document.getElementById('allowedHours');
+    const allowedDaysGroup = document.getElementById('allowedDaysGroup');
+    const customHoursGroup = document.getElementById('customHoursGroup');
+    const customStartTimeInput = document.getElementById('customStartTime');
+    const customEndTimeInput = document.getElementById('customEndTime');
+    const sessionDurationInput = document.getElementById('sessionDuration');
+    const autoLogoutSelect = document.getElementById('autoLogout');
+    const adminNoteTextarea = document.getElementById('adminNote');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const settingsMessage = document.getElementById('settingsMessage');
+
+    const taskModal = document.getElementById('taskModal');
+    const closeTaskModalBtn = document.querySelector('.close-task');
+    const taskUserNameSpan = document.getElementById('taskUserName');
+    const taskTitleInput = document.getElementById('taskTitle');
+    const taskDescriptionTextarea = document.getElementById('taskDescription');
+    const taskPointsAdminInput = document.getElementById('taskPointsAdmin');
+    const taskDueDateInput = document.getElementById('taskDueDate'); 
+    const taskDueTimeInput = document.getElementById('taskDueTime');
+    const taskLockedCheckbox = document.getElementById('taskLocked');
+    const lockTimeGroup = document.getElementById('lockTimeGroup');
+    const lockUntilTimeInput = document.getElementById('lockUntilTime');
+    const assignTaskBtn = document.getElementById('assignTaskBtn');
+    const taskMessage = document.getElementById('taskMessage');
+
+    let currentUserId = null;
+
+
+    function showCustomAlert(title, message) {
+        console.log(`${title}: ${message}`);
+        if (taskMessage && taskModal.style.display === 'flex') {
+            taskMessage.textContent = `${title}: ${message}`;
+            taskMessage.style.color = title === "Error" ? 'red' : 'green';
+        } else {
+            authMessage.textContent = `${title}: ${message}`;
+            authMessage.style.color = title === "Error" ? 'red' : 'green';
+        }
+        setTimeout(() => {
+            if (taskMessage) taskMessage.textContent = '';
+            authMessage.textContent = '';
+        }, 5000);
+    }
+
+    async function fetchAndDisplayUsers() {
+        usersTableBody.innerHTML = '<tr><td colspan="5">Loading users...</td></tr>';
+        try {
+            const usersCollectionRef = collection(db, 'users');
+            const querySnapshot = await getDocs(usersCollectionRef);
+            
+            usersTableBody.innerHTML = '';
+            querySnapshot.forEach((doc) => {
+                const userData = doc.data();
+                const userId = doc.id;
+                const row = usersTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${userId.substring(0,8)}...</td>
+                    <td>${userData.email || 'N/A'}</td>
+                    <td><span class="${userData.isOnline ? 'status-on' : 'status-off'}">${userData.isOnline ? 'Online' : 'Offline'}</span></td>
+                    <td>${userData.lastActive ? new Date(userData.lastActive.toDate()).toLocaleString() : 'Never'}</td>
+                    <td>
+                        <button class="settings" data-user-id="${userId}" data-user-name="${userData.email || userId}"><i class="fas fa-cog"></i></button>
+                        <button class="assign-task-btn" data-user-id="${userId}" data-user-name="${userData.email || userId}"><i class="fas fa-plus"></i></button>
+                    </td>
+                `;
+            });
+            attachUserActionListeners();
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            usersTableBody.innerHTML = '<tr><td colspan="5" style="color:red;">Error loading users.</td></tr>';
+        }
+    }
+
+    async function fetchAndDisplayUserProgress() {
+        const progressTableBody = document.querySelector('#progressTable tbody');
+        const totalGreenFlagsEl = document.getElementById('totalGreenFlags');
+        const totalRedFlagsEl = document.getElementById('totalRedFlags');
+        const totalPendingTasksEl = document.getElementById('totalPendingTasks'); 
+        const totalUserPointsEl = document.getElementById('totalUserPoints'); // Get total points element
+
+        if (!progressTableBody) return;
+        progressTableBody.innerHTML = '<tr><td colspan="9">Loading progress...</td></tr>'; // Increased colspan to 9
+
+        try {
+            const usersSnapshot = await getDocs(collection(db, 'users'));
+            const users = {};
+            usersSnapshot.forEach(doc => {
+                users[doc.id] = { ...doc.data(), id: doc.id };
+            });
+
+            const tasksSnapshot = await getDocs(collection(db, 'forms'));
+            
+            const userProgress = {};
+            let totalGreenFlags = 0;
+            let totalRedFlags = 0;
+            let totalPendingTasks = 0;
+            let overallTotalPoints = 0; // Initialize overall total points
+
+            for (const userId in users) {
+                userProgress[userId] = {
+                    email: users[userId].email || 'N/A',
+                    assigned: 0,
+                    completed: 0,
+                    pending: 0,
+                    greenFlags: 0,
+                    redFlags: 0,
+                    totalPoints: 0, // Initialize total points for each user
+                    timeSpent: 0
+                };
+            }
+
+            const now = new Date();
+
+            tasksSnapshot.forEach(doc => {
+                const task = doc.data();
+                const assignedUserId = task.assignedTo;
+                if (userProgress[assignedUserId]) {
+                    userProgress[assignedUserId].assigned++;
+
+                    // Green flag condition
+                    if (task.status === 'completed') {
+                        userProgress[assignedUserId].completed++;
+                        userProgress[assignedUserId].greenFlags++;
+                        totalGreenFlags++;
+                        userProgress[assignedUserId].totalPoints += (task.points || 0); // Add points for completed tasks
+                        overallTotalPoints += (task.points || 0); // Add to overall total points
+
+                        // Calculate time spent if completedAt and createdAt exist
+                        if (task.createdAt && task.completedAt) {
+                            const createdTime = task.createdAt.toDate().getTime();
+                            const completedTime = task.completedAt.toDate().getTime();
+                            userProgress[assignedUserId].timeSpent += (completedTime - createdTime);
+                        }
+                    } else if (task.status === 'pending' || task.status === 'active') {
+                        userProgress[assignedUserId].pending++;
+                        totalPendingTasks++;
+                    }
+
+                    // Red flag condition (overdue)
+                    const dueDate = task.dueDate ? new Date(task.dueDate) : null;
+                    if ((task.status === 'pending' || task.status === 'active') && dueDate && dueDate < now) {
+                        userProgress[assignedUserId].redFlags++;
+                        totalRedFlags++;
+                    }
+                }
+            });
+
+            progressTableBody.innerHTML = '';
+            for (const userId in userProgress) {
+                const progress = userProgress[userId];
+                const percentage = progress.assigned > 0 ? ((progress.completed / progress.assigned) * 100).toFixed(1) : 0;
+                
+                // Format time spent
+                const totalSeconds = Math.floor(progress.timeSpent / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const formattedTime = `${hours}h ${minutes}m ${seconds}s`;
+
+                const row = progressTableBody.insertRow();
+                row.innerHTML = `
+                    <td class="py-3 px-4">${progress.email}</td>
+                    <td class="py-3 px-4 text-center">${progress.assigned}</td>
+                    <td class="py-3 px-4 text-center">${progress.completed}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="bg-yellow-200 text-yellow-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.pending}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${percentage}%; background-color: var(--primary-color);">
+                                ${percentage}%
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="bg-green-200 text-green-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.greenFlags}</span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="bg-red-200 text-red-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.redFlags}</span>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="bg-blue-200 text-blue-800 font-semibold px-3 py-1 rounded-full text-sm">${progress.totalPoints}</span>
+                    </td>
+                    <td class="py-3 px-4 text-center">${formattedTime}</td>
+                `;
+            }
+
+            if(totalGreenFlagsEl) totalGreenFlagsEl.textContent = totalGreenFlags;
+            if(totalRedFlagsEl) totalRedFlagsEl.textContent = totalRedFlags;
+            if(totalPendingTasksEl) totalPendingTasksEl.textContent = totalPendingTasks;
+            if(totalUserPointsEl) totalUserPointsEl.textContent = overallTotalPoints; // Update overall total points
+
+        } catch (error) {
+            console.error("Error fetching user progress:", error);
+            progressTableBody.innerHTML = '<tr><td colspan="9" style="color:red;">Error loading progress.</td></tr>'; // Increased colspan
+        }
+    }
+
+    async function logAdminLogin(email, status) {
+        try {
+            await addDoc(collection(db, 'logs'), {
+                type: 'login', 
+                action: 'Admin Login Attempt',
+                userEmail: email,
+                note: `Status: ${status}`,
+                timestamp: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Error logging admin login:", error);
+        }
+    }
+    
+    async function fetchAndDisplayLogs() {
+        logsContainer.innerHTML = '<p>Loading logs...</p>';
+        loginLogsTableBody.innerHTML = '<tr><td colspan="4">Loading login logs...</td></tr>';
+
+        try {
+            const logsCollectionRef = collection(db, 'logs');
+            const q = query(logsCollectionRef, orderBy("timestamp", "desc"));
+            const querySnapshot = await getDocs(q);
+
+            logsContainer.innerHTML = '';
+            loginLogsTableBody.innerHTML = '';
+
+            let loginLogsFound = false;
+            let generalLogsFound = false;
+
+            querySnapshot.forEach(doc => {
+                const logData = doc.data();
+                if (logData.type === 'login') {
+                    loginLogsFound = true;
+                    const row = loginLogsTableBody.insertRow();
+                    const loginTime = logData.timestamp ? new Date(logData.timestamp.toDate()).toLocaleString() : 'N/A';
+                    const status = logData.note ? logData.note.split(': ')[1] : 'N/A';
+                    
+                    row.innerHTML = `
+                        <td>${logData.userEmail || 'N/A'}</td>
+                        <td>${loginTime}</td>
+                        <td><span class="${status === 'Success' ? 'status-success' : 'status-failed'}">${status}</span></td>
+                        <td>${logData.ipAddress || '127.0.0.1'}</td>
+                    `;
+                } else {
+                    generalLogsFound = true;
+                    const logEntry = document.createElement('div');
+                    logEntry.className = 'log-entry';
+                    const logTime = logData.timestamp ? new Date(logData.timestamp.toDate()).toLocaleString() : 'N/A';
+                    const logTypeClass = logData.type === 'admin' ? 'log-admin' : 'log-user';
+                    logEntry.innerHTML = `
+                        <p><span class="${logTypeClass}">[${(logData.type || '').toUpperCase()}]</span> <strong>${logData.action}</strong> by ${logData.userEmail || logData.userId} <span class="log-time">(${logTime})</span></p>
+                        ${logData.note ? `<p class="log-note">${logData.note}</p>` : ''}
+                    `;
+                    logsContainer.appendChild(logEntry);
+                }
+            });
+
+            if (!loginLogsFound) {
+                loginLogsTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">No login activity found.</td></tr>';
+            }
+            if (!generalLogsFound) {
+                 logsContainer.innerHTML = '<p style="text-align:center; padding: 20px;">No general activity logs found.</p>';
+            }
+
+        } catch (error) {
+            console.error("Error fetching logs:", error);
+            logsContainer.innerHTML = '<p style="color:red;">Error loading general logs.</p>';
+            loginLogsTableBody.innerHTML = '<tr><td colspan="4" style="color:red;">Error loading login logs.</td></tr>';
+        }
+    }
+
+    loginBtn.addEventListener('click', async () => {
+        const email = document.getElementById('adminEmail').value;
+        const password = document.getElementById('adminPassword').value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            await logAdminLogin(email, 'Success');
+            showCustomAlert("Success", "Logged in successfully!");
+        } catch (error) {
+            console.error("Admin login failed:", error);
+            await logAdminLogin(email, 'Failed');
+            showCustomAlert("Error", `Login failed: ${error.message}`);
+        }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            authSection.style.display = 'none';
+            adminSection.style.display = 'block';
+            fetchAndDisplayUsers();
+            fetchAndDisplayLogs();
+            fetchAndDisplayUserProgress();
+        } else {
+            authSection.style.display = 'block';
+            adminSection.style.display = 'none';
+        }
+    });
+
+    adminLogoutBtn.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+            showCustomAlert("Logged Out", "Admin logged out successfully!");
+        } catch (error) {
+            console.error("Admin logout failed:", error);
+            showCustomAlert("Error", "Admin logout failed: " + error.message);
+        }
+    });
+
+    refreshBtn.addEventListener('click', () => {
+        fetchAndDisplayUsers();
+        fetchAndDisplayLogs();
+        fetchAndDisplayUserProgress(); 
+    });
+
+    closeModalBtns.forEach(btn => btn.addEventListener('click', () => { settingsModal.style.display = 'none'; }));
+    closeTaskModalBtn.addEventListener('click', () => { taskModal.style.display = 'none'; });
+
+    window.addEventListener('click', (event) => {
+        if (event.target == settingsModal) settingsModal.style.display = 'none';
+        if (event.target == taskModal) taskModal.style.display = 'none';
+    });
+
+    allowedHoursSelect.addEventListener('change', (e) => {
+        customHoursGroup.style.display = (e.target.value === 'custom') ? 'flex' : 'none';
+    });
+    
+    taskLockedCheckbox.addEventListener('change', () => {
+        lockTimeGroup.style.display = taskLockedCheckbox.checked ? 'block' : 'none';
+    });
+
+    function attachUserActionListeners() {
+        document.querySelectorAll('.settings').forEach(button => {
+            button.addEventListener('click', async (e) => {
+                currentUserId = e.currentTarget.dataset.userId;
+                modalUserName.textContent = e.currentTarget.dataset.userName;
+                
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', currentUserId));
+                    if (userDoc.exists()) {
+                        const settings = userDoc.data().settings || {};
+                        allowedHoursSelect.value = settings.allowedHours || 'any';
+                        customHoursGroup.style.display = (settings.allowedHours === 'custom') ? 'flex' : 'none';
+                        customStartTimeInput.value = settings.customStartTime || '';
+                        customEndTimeInput.value = settings.customEndTime || '';
+                        sessionDurationInput.value = settings.sessionDuration || 8;
+                        autoLogoutSelect.value = settings.autoLogout || 'enabled';
+                        adminNoteTextarea.value = settings.adminNote || '';
+                        document.querySelectorAll('#allowedDaysGroup input[type="checkbox"]').forEach(cb => {
+                            cb.checked = settings.allowedDays ? settings.allowedDays.includes(cb.value) : false;
+                        });
+                    }
+                } catch (error) {
+                    settingsMessage.textContent = `Error loading settings: ${error.message}`;
+                }
+                settingsModal.style.display = 'flex';
+            });
+        });
+
+        document.querySelectorAll('.assign-task-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                currentUserId = e.currentTarget.dataset.userId;
+                taskUserNameSpan.textContent = e.currentTarget.dataset.userName;
+                taskTitleInput.value = '';
+                taskDescriptionTextarea.value = '';
+                taskPointsAdminInput.value = '30';
+                taskDueDateInput.value = '';
+                taskDueTimeInput.value = '';
+                taskLockedCheckbox.checked = false;
+                lockTimeGroup.style.display = 'none';
+                lockUntilTimeInput.value = '';
+                taskMessage.textContent = '';
+                taskModal.style.display = 'flex';
+            });
+        });
+    }
+
+    saveSettingsBtn.addEventListener('click', async () => {
+        if (!currentUserId) return;
+        const settings = {
+            allowedHours: allowedHoursSelect.value,
+            sessionDuration: parseInt(sessionDurationInput.value),
+            autoLogout: autoLogoutSelect.value,
+            adminNote: adminNoteTextarea.value,
+            allowedDays: Array.from(document.querySelectorAll('#allowedDaysGroup input:checked')).map(cb => cb.value),
+            ...(allowedHoursSelect.value === 'custom' && { customStartTime: customStartTimeInput.value, customEndTime: customEndTimeInput.value })
+        };
+        try {
+            await setDoc(doc(db, 'users', currentUserId), { settings }, { merge: true });
+            await addDoc(collection(db, 'logs'), {
+                type: 'admin', action: `Updated settings for ${modalUserName.textContent}`,
+                userEmail: auth.currentUser.email, timestamp: serverTimestamp()
+            });
+            settingsModal.style.display = 'none';
+        } catch (error) {
+            settingsMessage.textContent = `Error: ${error.message}`;
+        }
+    });
+
+    assignTaskBtn.addEventListener('click', async () => {
+        if (!currentUserId) return;
+        const title = taskTitleInput.value.trim();
+        const description = taskDescriptionTextarea.value.trim();
+        if (!title || !description) return;
+        try {
+            const dueDate = `${taskDueDateInput.value}T${taskDueTimeInput.value}`;
+            await addDoc(collection(db, 'forms'), { 
+                title, description, points: parseInt(taskPointsAdminInput.value), dueDate,
+                assignedTo: currentUserId, status: 'pending', createdBy: 'Admin', 
+                createdAt: serverTimestamp(), isLocked: taskLockedCheckbox.checked,
+                lockUntil: taskLockedCheckbox.checked ? lockUntilTimeInput.value : null
+            });
+             await addDoc(collection(db, 'logs'), {
+                type: 'admin', action: `Assigned task "${title}" to ${taskUserNameSpan.textContent}`,
+                userEmail: auth.currentUser.email, timestamp: serverTimestamp()
+            });
+            taskModal.style.display = 'none';
+        } catch (error) {
+            taskMessage.textContent = `Error: ${error.message}`;
+        }
+    });
+</script>
+</body>
+</html>
