@@ -283,12 +283,7 @@
             font-size: 0.9em;
         }
         
-        .task-filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+       
 
         .task-filter-btn {
             background-color: #e2e8f0;
@@ -1587,11 +1582,14 @@
                 </div>
             </div>
             
+
+            
             <section id="adminSection" class="section">
               <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center"><i class="fas fa-user-shield mr-3 text-red-600"></i> Admin Dashboard</h2>
               <p class="text-lg text-gray-700">Welcome, Admin. Use this dashboard to manage system-wide settings and users.</p>
             </section>
         </section>
+
 
         <!-- NEW: Chat-to-Task System Section -->
         <section id="chatSection" class="section">
@@ -1699,14 +1697,32 @@
 
         <section id="myTasksOverviewSection" class="section">
             <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center"><i class="fas fa-list-check mr-3 text-teal-600"></i> My Tasks Overview</h2>
-            <div class="task-filters flex flex-wrap gap-3 mb-6 p-2 bg-gray-100 rounded-lg shadow-sm">
-                <button class="task-filter-btn active" data-filter="all">All</button>
-                <button class="task-filter-btn" data-filter="pending">Pending</button>
-                <button class="task-filter-btn" data-filter="inprogress">In Progress</button>
-                <button class="task-filter-btn" data-filter="completed">Completed</button>
-                <button class="task-filter-btn" data-filter="overdue">Overdue</button>
-                <button class="task-filter-btn" data-filter="shared">Shared</button>
-            </div>
+            <div class="flex flex-wrap gap-4">
+  <!-- Pending Tasks -->
+  <div class="w-full md:w-1/2 lg:w-1/4 bg-white rounded-lg shadow p-4">
+    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-hourglass-start text-yellow-500 mr-2"></i> Pending</h3>
+    <div id="pendingTasksColumn" class="space-y-3"></div>
+  </div>
+
+  <!-- In Progress Tasks -->
+  <div class="w-full md:w-1/2 lg:w-1/4 bg-white rounded-lg shadow p-4">
+    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-spinner text-blue-500 mr-2"></i> In Progress</h3>
+    <div id="inProgressTasksColumn" class="space-y-3"></div>
+  </div>
+
+  <!-- Completed Tasks -->
+  <div class="w-full md:w-1/2 lg:w-1/4 bg-white rounded-lg shadow p-4">
+    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Completed</h3>
+    <div id="completedTasksColumn" class="space-y-3"></div>
+  </div>
+
+  <!-- Overdue Tasks -->
+  <div class="w-full md:w-1/2 lg:w-1/4 bg-white rounded-lg shadow p-4">
+    <h3 class="font-bold text-lg mb-3 flex items-center"><i class="fas fa-exclamation-circle text-red-500 mr-2"></i> Overdue</h3>
+    <div id="overdueTasksColumn" class="space-y-3"></div>
+  </div>
+</div>
+
             <div id="myTasksListContainer" class="tasks-list-grid">
                 <div id="myTasksListContainer" class="space-y-3">
   <!-- Sample Task Item -->
@@ -4311,11 +4327,23 @@
                         : '';
                     
                     // MODIFIED: Restructured HTML for 3-column layout
+                    const progress = getProgressPercent(task.status);
+
                     taskCard.innerHTML = `
                         <div class="task-header flex justify-between items-center cursor-pointer" onclick="toggleTaskDetails(this)">
                             <h3 class="font-semibold text-xl text-gray-800">${task.title}</h3>
                             <input type="checkbox" class="h-5 w-5 accent-green-500 rounded-full" ${task.status === 'completed' ? 'checked' : ''}>
                         </div>
+                        <!-- Progress Bar -->
+<div class="mt-2">
+    <div class="w-full bg-gray-200 rounded-full h-2 mb-1">
+        <div class="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-in-out"
+             style="width: ${progress}%"></div>
+    </div>
+    <p class="text-xs text-gray-500">${progress}% done</p>
+</div>
+
+                        
 
                         <div class="task-details mt-2 pl-2 text-sm text-gray-700 hidden">
                             <div class="flex justify-between items-start mb-3 ${lockStatusClass}">
@@ -4621,8 +4649,60 @@ function toggleTaskDetails(headerElement) {
 // REMOVED: The old JSGantt.GanttChart initialization.
 // The main script block (type="module") now handles Frappe Gantt rendering dynamically.
 // This block is no longer needed to initialize the Gantt chart.
+function getProgressPercent(status) {
+    const lowerStatus = status.toLowerCase();
+
+    if (lowerStatus === "completed") return 100;
+    if (lowerStatus === "active" || lowerStatus === "in progress") return 30;
+    if (lowerStatus === "pending") return 0;
+
+    return 0;
+}
+function createTaskCard(task) {
+  // Create card container
+  const card = document.createElement("div");
+  card.className = "bg-white p-3 rounded-lg shadow border";
+
+  // Task title
+  const title = document.createElement("h4");
+  title.className = "font-semibold mb-2";
+  title.textContent = task.name;
+
+  // Progress bar container
+  const progressContainer = document.createElement("div");
+  progressContainer.className = "w-full bg-gray-200 h-2 rounded mb-2 overflow-hidden";
+
+  // Progress fill
+  const progressFill = document.createElement("div");
+  progressFill.className = "bg-indigo-500 h-full transition-all duration-300";
+  progressFill.style.width = getProgressPercent(task.status) + "%";
+
+  progressContainer.appendChild(progressFill);
+
+  // Status label
+  const statusLabel = document.createElement("span");
+  statusLabel.className = "text-sm text-gray-600";
+  statusLabel.textContent = `${getProgressPercent(task.status)}% done`;
+
+  // Checkbox
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.className = "float-right h-5 w-5 accent-green-500";
+
+  // Append elements to card
+  card.appendChild(title);
+  card.appendChild(progressContainer);
+  card.appendChild(statusLabel);
+  card.appendChild(checkbox);
+
+  return card;
+}
+
+
 
 </script>
+
+
 
   
 </script>
